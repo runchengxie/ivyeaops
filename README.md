@@ -2,9 +2,9 @@
 
 [简体中文](docs/zh-CN/readme.md)
 
-[Project website and documentation](https://runchengxie.github.io/ivyeaops/)
+[Project website and documentation](https://runchengxie.github.io/store-ops/)
 
-[Interactive eMAG demo](https://runchengxie.github.io/ivyeaops/demo/) · Synthetic data; changes reset on refresh.
+[Interactive eMAG demo](https://runchengxie.github.io/store-ops/demo/) · Synthetic data; changes reset on refresh.
 
 A self-hosted eMAG RO operations workspace, forked from [Hector-xue/IvyeaOps](https://github.com/Hector-xue/IvyeaOps). The fork uses imported evidence for inspections, business summaries and local drafts. It retains the original platform tools under explicit legacy routes.
 

@@ -1492,3 +1492,7 @@
 
 - Added administrator/read-MCP snapshot clearance review, explicit-baseline stock and price-rejection observations, and exact offer references. Unknown stock and mismatched identities stay excluded.
 - Added a portable current-price validation skill with global-selection checks, visible confirmation, uncertain-result stop rules and read-only follow-up. No new merchant-write endpoint or procurement capability.
+
+## 2026-11-03 — Repository renamed to store-ops
+
+Updated maintained repository, documentation-site, demo and issue-template links to runchengxie/store-ops. Historical audit records and upstream attribution retain their original identities.

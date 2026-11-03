@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
   - name: 安全漏洞
-    url: https://github.com/runchengxie/IvyeaOps/blob/main/docs/security.md
+    url: https://github.com/runchengxie/store-ops/blob/main/docs/security.md
     about: 请不要开公开 issue —— 按 docs/security.md 里的方式私下报告
   - name: Skill 相关
-    url: https://github.com/runchengxie/IvyeaOps/blob/main/docs/contributing.md
+    url: https://github.com/runchengxie/store-ops/blob/main/docs/contributing.md
     about: Skill 不需要改仓库代码，走 Skill 中心即可

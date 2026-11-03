@@ -14,7 +14,7 @@ from markdown.extensions import Extension
 from markdown.treeprocessors import Treeprocessor
 
 ROOT = Path(__file__).resolve().parents[1]
-REPOSITORY = 'https://github.com/runchengxie/ivyeaops'
+REPOSITORY = 'https://github.com/runchengxie/store-ops'
 PAGES = {
     'en': {'index': 'README.md', 'capabilities': 'docs/emag-capability-map.md',
            'architecture': 'docs/architecture.md', 'installation': 'docs/installation.md',
@@ -58,7 +58,7 @@ class RewriteLinks(Treeprocessor):
                 element.set('href', urlunsplit(('', '', dest, parsed.query, parsed.fragment)))
             else:
                 kind = 'tree' if target.is_dir() else 'blob'
-                path = f'/runchengxie/ivyeaops/{kind}/main/{quote(relative.as_posix(), safe="/")}'
+                path = f'/runchengxie/store-ops/{kind}/main/{quote(relative.as_posix(), safe="/")}'
                 element.set('href', urlunsplit(('https', 'github.com', path, parsed.query, parsed.fragment)))
         return root
 
