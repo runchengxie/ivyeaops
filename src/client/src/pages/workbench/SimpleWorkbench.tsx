@@ -37,6 +37,7 @@ export default function SimpleWorkbench({ demo = false, ChatComponent, viewer, o
 
   useEffect(() => {
     let alive = true;
+    setError(''); setLoading(true);
     api.get('/emag/stores').then(response => {
       if (!alive) return;
       const items = Array.isArray(response.data) ? response.data.filter(item => typeof item?.store_id === 'string') : [];
@@ -45,7 +46,7 @@ export default function SimpleWorkbench({ demo = false, ChatComponent, viewer, o
       if (!items.length) setLoading(false);
     }).catch(error => { if (alive) { setError(errText(error, '无法读取店铺，请检查权限和连接。')); setLoading(false); } });
     return () => { alive = false; };
-  }, []);
+  }, [refresh]);
   useEffect(() => {
     const version = ++generation.current;
     if (!store) return;

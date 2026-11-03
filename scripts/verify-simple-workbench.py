@@ -49,6 +49,7 @@ def main():
 
         page.get_by_role('button', name='让 AI 分析').first.click()
         textarea = page.locator('.sw-chat-body textarea')
+        page.wait_for_function("document.querySelector('.sw-chat-body textarea').value.includes('demo-ro')")
         assert 'demo-ro' in textarea.input_value()
         assert 'demo-v1' in textarea.input_value()
         assert page.evaluate('window.__lastChatBody === undefined')
@@ -90,9 +91,11 @@ def main():
         page.get_by_role('button', name='让 AI 分析').first.click()
         assert page.get_by_role('button', name='对话', exact=True).get_attribute('aria-pressed') == 'true'
         textarea = page.locator('.sw-chat-body textarea')
+        page.wait_for_function("document.querySelector('.sw-chat-body textarea').value.includes('demo-ro')")
         assert 'demo-ro' in textarea.input_value()
         page.get_by_role('button', name='概况', exact=True).click()
         page.get_by_role('button', name='对话', exact=True).click()
+        page.wait_for_function("document.querySelector('.sw-chat-body textarea').value.includes('demo-ro')")
         assert 'demo-ro' in textarea.input_value()
         measured = layout(page)
         assert measured['doc']['width'] <= 390, measured
@@ -104,6 +107,12 @@ def main():
             visit(page, query=scenario)
             page.get_by_text(label, exact=True).wait_for()
         results['empty_and_error_states'] = True
+        visit(page, query='wbcase=list-retry')
+        page.get_by_role('alert').filter(has_text='暂时无法读取').wait_for()
+        page.evaluate('window.__harnessListRecovered = true')
+        page.get_by_role('button', name='重试', exact=True).click()
+        page.get_by_text('Demo product', exact=True).wait_for(timeout=5000)
+        results['store_list_retry_recovers'] = True
         visit(page, query='agentdown=1')
         page.locator('.sw-chat-body textarea').wait_for()
         page.get_by_role('button', name='让 AI 分析').first.click()

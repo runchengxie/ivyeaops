@@ -1661,6 +1661,7 @@ export function installMockApi(): void {
     ((window as any).__harnessRequests ||= []).push(full);
     // Compact workbench fixtures exercise store switching without real credentials.
     const workbenchCase = new URLSearchParams(location.search).get('wbcase');
+    if (workbenchCase === 'list-retry' && full === '/emag/stores' && !(window as any).__harnessListRecovered) throw Object.assign(new Error('Synthetic store list unavailable'), { response: { status: 503 } });
     if (workbenchCase === 'multi' && full === '/emag/stores') return { ...reply(config), data: [{ store_id: 'demo-ro' }, { store_id: 'second-ro' }] };
     if (workbenchCase === 'multi' && full === '/ivyea-agent/chat/sessions/fail-b') throw Object.assign(new Error('Synthetic history unavailable'), { response: { status: 404 } });
     if (workbenchCase === 'offline' && full.endsWith('/workspace')) throw Object.assign(new Error('Synthetic snapshot unavailable'), { response: { status: 503 } });
