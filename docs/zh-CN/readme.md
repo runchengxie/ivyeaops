@@ -2,9 +2,9 @@
 
 [英文权威版本](../../README.md)
 
-[项目网站与文档](https://runchengxie.github.io/ivyeaops/zh-CN/)
+[项目网站与文档](https://runchengxie.github.io/store-ops/zh-CN/)
 
-[eMAG 交互演示](https://runchengxie.github.io/ivyeaops/demo/) · 使用虚构数据，刷新后重置。
+[eMAG 交互演示](https://runchengxie.github.io/store-ops/demo/) · 使用虚构数据，刷新后重置。
 
 本项目是 [Hector-xue/IvyeaOps](https://github.com/Hector-xue/IvyeaOps) 的自托管 fork，聚焦 eMAG RO 的证据巡检、经营摘要与本地草稿，原平台工具保留在明确的 legacy 路由中。
 
