@@ -140,3 +140,7 @@ job 退出码 0 表示报告/回执阶段完成，1 表示已记录的阶段失�
 
 
 价格口径修正：旧版场景曾把原始售价当成含税价，可能低估收入。保留原始输入和历史报告，当前场景按修正后的税前契约重算。官方将recommended_price定义为折扣前建议零售价，min_sale_price/max_sale_price为卖家自设边界，均不能当作已核实的恢复阈值。来源：https://marketplace-api.emag.ro/api-doc。
+
+### 清仓复查
+
+管理员接口 `GET /api/emag/stores/{store_id}/clearance-review?baseline_snapshot_id=...` 和 read 权限 MCP `ivyea_emag_clearance_review` 返回已导入快照的清仓队列及可选的明确历史基线比较。只看队列时省略基线。队列不是审批，库存下降或价格拒绝消失不代表已成交、前台可购买或已结算。来源和覆盖范围必须一致、采集时间必须前进，SKU/PNK 不一致的行排除比较。配合[价格验证 Skill](../../skills/emag/price-validation/SKILL.md)及另行授权的浏览器工具使用；未新增浏览器写入接口。

@@ -8,6 +8,15 @@ from app.services import emag_workspace, emag_jobs
 router=APIRouter(dependencies=[Depends(require_admin)])
 
 
+@router.get('/stores/{store_id}/clearance-review')
+def clearance_review(store_id: str, baseline_snapshot_id: str | None = None):
+    from app.services import emag_clearance_review
+    try:
+        return emag_clearance_review.read(store_id, baseline_snapshot_id)
+    except (OSError, ValueError) as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+
 class Draft(BaseModel):
     model_config=ConfigDict(extra='forbid')
     snapshot_id:str

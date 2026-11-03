@@ -1485,3 +1485,8 @@
 ---
 
 更早的版本请看 [Releases](https://github.com/Hector-xue/IvyeaOps/releases)。
+
+## 2026-11-03 — Clearance review handoff
+
+- Added administrator/read-MCP snapshot clearance review, explicit-baseline stock and price-rejection observations, and exact offer references. Unknown stock and mismatched identities stay excluded.
+- Added a portable current-price validation skill with global-selection checks, visible confirmation, uncertain-result stop rules and read-only follow-up. No new merchant-write endpoint or procurement capability.

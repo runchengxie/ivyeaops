@@ -48,6 +48,11 @@ def _schema(props: Optional[dict] = None, required: Optional[list] = None) -> di
 
 # 店铺变更仍未开放；唯一写工具是保存本地巡检报告。
 TOOLS: Dict[str, dict] = {
+    "ivyea_emag_clearance_review": {
+        "description": "Read snapshot-bound existing-stock priorities and an optional earlier baseline comparison; no live calls, approvals or merchant writes.",
+        "inputSchema": _schema({"store_id": {"type": "string"}, "baseline_snapshot_id": {"type": "string"}}, ["store_id"]),
+        "scope": "read",
+    },
     "ivyea_emag_job_status": {
         "description": "读取最近手动 eMAG 巡检回执，区分新采集、离线重放及失败阶段；不启动采集。",
         "inputSchema": _schema({"store_id": {"type": "string"}}, ["store_id"]),
@@ -138,6 +143,16 @@ def _dump(obj: Any) -> dict:
 
 async def _call_tool(name: str, args: dict) -> dict:
     """执行一个工具，返回 MCP 的 content 结构。"""
+    if name == "ivyea_emag_clearance_review":
+        if (not isinstance(args, dict) or set(args) - {"store_id", "baseline_snapshot_id"}
+                or not isinstance(args.get('store_id'), str)
+                or ('baseline_snapshot_id' in args and not isinstance(args['baseline_snapshot_id'], str))):
+            return _text("Store and optional baseline must be strings; unexpected arguments are rejected", is_error=True)
+        try:
+            from app.services import emag_clearance_review
+            return _dump(emag_clearance_review.read(args['store_id'], args.get('baseline_snapshot_id')))
+        except (ValueError, OSError) as exc:
+            return _text(str(exc), is_error=True)
     if name in {"ivyea_store_snapshot", "ivyea_report_save", "ivyea_report_read", "ivyea_emag_job_status"}:
         from app.services import store_artifacts as stores
         spec = TOOLS[name]["inputSchema"]
