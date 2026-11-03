@@ -1652,12 +1652,25 @@ export function installMockApi(): void {
   // 错误照实显示，绝不能被 Gate 当成"没配置"藏掉。
   const lxErr = new URLSearchParams(location.search).get("lxerr") === "1";
 
+  let authAttempts = 0;
   let emagApproved=false,agentDecided=false;
   const slowReply = async (config: { url?: string; baseURL?: string;data?:unknown;method?:string }) => {
     const ms = delayFor((config.baseURL || "") + (config.url || ""));
     if (ms) await new Promise((r) => setTimeout(r, ms));
     const full = (config.baseURL || "/api").replace(/^\/api/, "") + (config.url || "");
     ((window as any).__harnessRequests ||= []).push(full);
+    // Exercise the real auth guard against temporary outages and explicit rejection.
+    if (full === '/auth/me') {
+      const scenario = new URLSearchParams(location.search).get('authcase');
+      authAttempts++;
+      const failures = scenario === 'transient' ? 2 : Infinity;
+      if (scenario === 'recover' && (window as any).__harnessAuthRecovered) return reply(config);
+      if (scenario && authAttempts <= failures) {
+        if (scenario === 'network') throw new Error('Synthetic network outage');
+        const status = scenario === 'denied' ? 403 : 503;
+        throw Object.assign(new Error('Synthetic auth failure'), { response: { status } });
+      }
+    }
     if(config.method&&config.method!=='get')((window as any).__harnessMutations ||= []).push({url:full,method:config.method});
     if(full==='/emag/stores/demo-ro/workspace' && new URLSearchParams(location.search).get('quality')==='1'){
       const response=reply(config);const data=response.data as any;

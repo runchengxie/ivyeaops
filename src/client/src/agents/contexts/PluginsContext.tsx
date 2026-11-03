@@ -1,6 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { authenticatedFetch } from '../utils/api';
+import { errText } from '../../lib/errText';
+
+function pluginError(data: any, fallback: string): string {
+  return errText({ response: { data: { ...data, detail: data?.details ?? data?.detail } } }, fallback);
+}
 
 export type Plugin = {
   name: string;
@@ -57,7 +62,7 @@ export function PluginsProvider({ children }: { children: ReactNode }) {
         let errorMessage = `Failed to fetch plugins (${res.status})`;
         try {
           const data = await res.json();
-          errorMessage = data.details || data.error || errorMessage;
+          errorMessage = pluginError(data, errorMessage);
         } catch {
           errorMessage = res.statusText || errorMessage;
         }
@@ -87,7 +92,7 @@ export function PluginsProvider({ children }: { children: ReactNode }) {
         await refreshPlugins();
         return { success: true };
       }
-      return { success: false, error: data.details || data.error || 'Install failed' };
+      return { success: false, error: pluginError(data, 'Install failed') };
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : 'Install failed' };
     }
@@ -103,7 +108,7 @@ export function PluginsProvider({ children }: { children: ReactNode }) {
         await refreshPlugins();
         return { success: true };
       }
-      return { success: false, error: data.details || data.error || 'Uninstall failed' };
+      return { success: false, error: pluginError(data, 'Uninstall failed') };
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : 'Uninstall failed' };
     }
@@ -119,7 +124,7 @@ export function PluginsProvider({ children }: { children: ReactNode }) {
         await refreshPlugins();
         return { success: true };
       }
-      return { success: false, error: data.details || data.error || 'Update failed' };
+      return { success: false, error: pluginError(data, 'Update failed') };
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : 'Update failed' };
     }
@@ -135,7 +140,7 @@ export function PluginsProvider({ children }: { children: ReactNode }) {
         let errorMessage = `Toggle failed (${res.status})`;
         try {
           const data = await res.json();
-          errorMessage = data.details || data.error || errorMessage;
+          errorMessage = pluginError(data, errorMessage);
         } catch {
           // response body wasn't JSON, use status text
           errorMessage = res.statusText || errorMessage;

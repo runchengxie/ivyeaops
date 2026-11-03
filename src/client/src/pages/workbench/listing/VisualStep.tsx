@@ -1,3 +1,4 @@
+import { saveBlob } from "../../../lib/saveBlob";
 // 第三步：视觉套图 —— 策划 / 逐张与整套生成 / 质检复核，全部后台 job 驱动。
 // 布局沿用 Visual Studio 的 storyboard + inspector（vs-* 样式体系），
 // 数据流重做：编排在服务端，刷新页面不丢任何进行中的工作。
@@ -175,11 +176,7 @@ export default function VisualStep({ state }: { state: ListingState }) {
     setPsdBusy(slot);
     try {
       const { blob, name } = await fetchPsd(project.id, deliverable, slot);
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = name;
-      link.click();
-      URL.revokeObjectURL(link.href);
+      saveBlob(blob, name);
     } catch (error) {
       notify("error", `PSD 导出失败：${messageOf(error)}`);
     } finally {
@@ -214,11 +211,7 @@ export default function VisualStep({ state }: { state: ListingState }) {
         })),
       }, null, 2));
       const archive = await zip.generateAsync({ type: "blob" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(archive);
-      link.download = `listing_${deliverable}_${canDeliver ? "reviewed" : "draft"}.zip`;
-      link.click();
-      URL.revokeObjectURL(link.href);
+      saveBlob(archive, `listing_${deliverable}_${canDeliver ? "reviewed" : "draft"}.zip`);
       if (!canDeliver) notify("warn", "已导出草稿包；未人工复核的图片文件名带 DRAFT");
     } catch (error) {
       notify("error", `整套导出失败：${(error as Error).message || "未知错误"}`);
