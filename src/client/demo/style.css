@@ -10,7 +10,7 @@ html,body,#root{height:100%;min-height:0}body{background:var(--bg);color:var(--t
 .sw-demo-message{max-width:95%;font-size:13px;line-height:1.7}
 .sw-demo-message small{font-size:10px;color:var(--t3)}
 .sw-demo-message p{white-space:pre-wrap;margin:6px 0 0;overflow-wrap:anywhere}
-.sw-demo-user{margin-left:auto;padding:10px 14px;background:#f2effa;border-radius:12px}
+.sw-demo-user{margin-left:auto;padding:10px 14px;background:color-mix(in srgb,var(--t) 5%,transparent);border-radius:8px}
 .sw-demo-composer{margin:0 16px 16px;border:1px solid var(--b);border-radius:12px;padding:12px;flex-shrink:0}
 .sw-demo-composer textarea{display:block;width:100%;border:0;outline-offset:4px;resize:none;min-height:80px;background:transparent;color:var(--t);font-size:13px}
 .sw-demo-composer>div{display:flex;align-items:center;justify-content:space-between;gap:10px}

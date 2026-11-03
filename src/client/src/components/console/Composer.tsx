@@ -103,6 +103,7 @@ export default function Composer({
   placeholder = "告诉 Ivyea 你想做什么，剩下的交给我……",
   autoFocus,
   compact,
+  minimal = false,
   attaching,
 }: {
   value: ComposerValue;
@@ -169,12 +170,15 @@ export default function Composer({
   autoFocus?: boolean;
   /** 会话态：贴底、少留白。 */
   compact?: boolean;
+  minimal?: boolean;
   attaching?: boolean;
 }) {
   const taRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   /** `/model` 命令用它叫开模型面板 —— 计数变化即触发，不必把 open 提上来。 */
   const [modelOpen, setModelOpen] = useState(0);
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  useEffect(() => { if (minimal && modelOpen > 0) setOptionsOpen(true); }, [minimal, modelOpen]);
 
   // ── `/` 命令与 `@` 引用 ────────────────────────────────────────────────────
   // 触发规则：光标前最后一个 token 以 / 或 @ 开头，且它处在行首或空白之后。
@@ -439,7 +443,7 @@ export default function Composer({
   const approvalTone = APPROVAL_INFO[value.approval]?.tone || "calm";
 
   return (
-    <div className={"cc-composer" + (compact ? " compact" : "")}>
+    <div className={"cc-composer" + (compact ? " compact" : "") + (minimal ? " cc-minimal" : "")}>
       {menu && matches.length > 0 && (
         <div className="cc-menu">
           <div className="cc-menu-head">
@@ -554,6 +558,9 @@ export default function Composer({
         */}
       <div className="cc-bar">
         <div className="cc-bar-left">
+          {minimal && <button type="button" className="cc-minimal-options" aria-expanded={optionsOpen} onClick={() => setOptionsOpen(open => !open)}>选项</button>}
+          {minimal && <span className={"cc-minimal-status tone-" + approvalTone} title={APPROVAL_INFO[value.approval].hint}>{value.approval === 'readonly' ? '仅分析' : APPROVAL_INFO[value.approval].label}{value.goal ? ' · 目标模式' : ''}{value.preset ? ` · ${value.preset}` : ''}</span>}
+          <div className="cc-extra-controls" hidden={minimal && !optionsOpen}>
           <button
             type="button"
             className="cc-chip cc-chip-icon"
@@ -619,9 +626,11 @@ export default function Composer({
               >✕</button>
             </span>
           )}
+          </div>
         </div>
 
         <div className="cc-bar-right">
+          <div className="cc-model-options" hidden={minimal && !optionsOpen}>
           <ModelPicker
             currentLabel={modelLabel}
             value={modelValue}
@@ -631,6 +640,7 @@ export default function Composer({
             onSetDefault={onModelDefault}
             openSignal={modelOpen}
           />
+          </div>
           {busy && onStop && (
             /*
              * 停止**不再是主键**（跑着的时候主键是"追加发送"），但它现在是**真的
@@ -640,7 +650,7 @@ export default function Composer({
             <button type="button" className={"cc-stop-secondary" + (stopping ? " is-stopping" : "")}
                     onClick={onStop} disabled={stopping}
                     title={stopping ? "正在停…" : "停止这一轮（真的中止，不再烧 token；已经跑出来的内容会留下）"}>
-              {stopping ? <span className="spin" /> : <Icon name="stop" size={13} strokeWidth={3} />}
+              {stopping ? <span className="spin" /> : minimal ? '停止' : <Icon name="stop" size={13} strokeWidth={3} />}
             </button>
           )}
           <button
@@ -650,7 +660,7 @@ export default function Composer({
             disabled={(busy && !canFollowUp) || !value.text.trim()}
             title={canFollowUp ? "追加给正在跑的这一轮（Enter）" : "发送（Enter）"}
           >
-            <Icon name="send" size={17} strokeWidth={2.4} />
+            {minimal ? (canFollowUp ? '补充' : '发送') : <Icon name="send" size={17} strokeWidth={2.4} />}
           </button>
         </div>
       </div>

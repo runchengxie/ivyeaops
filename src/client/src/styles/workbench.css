@@ -5891,3 +5891,7 @@ html:is([data-skin="quiet"],[data-skin="lucent"],[data-skin="flat"]) .sb-workspa
 .cds-surface-ro.on{color:var(--t);border-color:var(--b2)}
 .cds-cap-why{padding:0 10px 9px;display:flex;flex-direction:column;gap:5px}
 .cds-pick{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* Optional composer groups preserve the original flex layout when expanded. */
+.cc-extra-controls,.cc-model-options{display:contents}
+.cc-extra-controls[hidden],.cc-model-options[hidden]{display:none!important}
