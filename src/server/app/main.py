@@ -548,15 +548,16 @@ def _error_body(request: Request, status_code: int, message: str) -> dict:
     path = request.url.path
     if status_code in (401, 403) and (path == "/api/mcp" or path.startswith("/api/mcp/")):
         hint = "MCP 令牌无效、已过期、已撤销，或缺少该工具需要的权限。请在 IvyeaOps「系统配置 → 对外 MCP」重新生成。"
-    return {
-        "detail": message,
-        "error": {
-            "code": code,
-            "message": message,
-            "request_id": getattr(request.state, "request_id", ""),
-            "hint": hint,
-        },
+    info = {
+        "code": code,
+        "message": message,
+        "request_id": getattr(request.state, "request_id", ""),
+        "hint": hint,
     }
+    # Embedded Agent clients render error as text; retain diagnostics separately.
+    if path.startswith("/api/agents/"):
+        return {"detail": message, "error": message, "error_info": info}
+    return {"detail": message, "error": info}
 
 
 @app.exception_handler(StarletteHTTPException)

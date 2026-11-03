@@ -61,6 +61,7 @@ export function errText(err: unknown, fallback = "操作失败"): string {
 
   // 我们自己的统一错误契约（见 server/app/main.py 的 _error_body）
   const contract = e?.response?.data?.error;
+  if (typeof contract === "string" && contract) return contract;
   if (contract?.message) {
     return contract.hint ? `${contract.message}（${contract.hint}）` : String(contract.message);
   }

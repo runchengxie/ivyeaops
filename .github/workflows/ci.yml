@@ -188,6 +188,9 @@ jobs:
       - name: Typecheck
         working-directory: src/client
         run: npm run typecheck
+      - name: Upstream reliability regressions
+        working-directory: src/client
+        run: npm run test:reliability
       - name: Render contracts
         working-directory: src/client
         run: npm run test:render

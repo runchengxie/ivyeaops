@@ -1,3 +1,4 @@
+import { saveBlob, saveText } from "../../../lib/saveBlob";
 // 第四步：交付 —— 完整文案导出（复制 / .txt 下载）+ 成图墙（PNG / PSD 单张下载）
 // + 交付就绪清单。
 import { useMemo, useState } from "react";
@@ -70,11 +71,7 @@ export default function DeliveryStep({ state }: { state: ListingState }) {
     setPsdBusy(key);
     try {
       const { blob, name } = await fetchPsd(project.id, deliverable, slot);
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = name;
-      link.click();
-      URL.revokeObjectURL(link.href);
+      saveBlob(blob, name);
     } catch (error) {
       notify("error", `PSD 导出失败：${messageOf(error)}`);
     } finally {
@@ -90,12 +87,7 @@ export default function DeliveryStep({ state }: { state: ListingState }) {
   }
 
   function downloadTxt() {
-    const blob = new Blob([fullText], { type: "text/plain;charset=utf-8" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `listing_${project?.asin || "copy"}.txt`;
-    a.click();
-    URL.revokeObjectURL(a.href);
+    saveText(fullText, `listing_${project?.asin || "copy"}.txt`);
   }
 
   return (

@@ -44,6 +44,7 @@ const EmagWorkspace = lazy(() => import("./pages/workbench/EmagWorkspace"));
 const EmagNews = lazy(() => import("./pages/workbench/EmagNews"));
 import { landingPath } from "./lib/navRegistry";
 import { me } from "./api/client";
+import { checkAuth } from "./lib/checkAuth";
 import { getSetupStatus, type SetupChecks } from "./api/setup";
 
 // ---------------------------------------------------------------------------
@@ -58,16 +59,25 @@ export const useAuth = () => useContext(AuthCtx);
 // Auth guard — also checks whether the first-run wizard is needed (admin only).
 // ---------------------------------------------------------------------------
 
-type AuthState = "loading" | "setup" | "ok" | "no";
+type AuthState = "loading" | "setup" | "ok" | "no" | "offline";
+
+function isAuthRejection(err: unknown): boolean {
+  const status = (err as { response?: { status?: number } })?.response?.status;
+  return status === 401 || status === 403;
+}
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const [state, setState] = useState<AuthState>("loading");
   const [setupChecks, setSetupChecks] = useState<SetupChecks | null>(null);
   const [auth, setAuth] = useState<{ role: Role; username: string; permissions: string[] }>({ role: "user", username: "", permissions: [] });
 
+  const [attempt, setAttempt] = useState(0);
+
   useEffect(() => {
-    me()
+    let cancelled = false;
+    checkAuth(me, () => cancelled)
       .then(async (u) => {
+        if (cancelled) return;
         setAuth({ role: u.role, username: u.username, permissions: u.permissions || [] });
         // First-run wizard is admin-only; registered users skip it.
         if (u.role !== "admin") {
@@ -76,6 +86,7 @@ function RequireAuth({ children }: { children: JSX.Element }) {
         }
         try {
           const s = await getSetupStatus();
+          if (cancelled) return;
           if (s.needs_setup) {
             setSetupChecks(s.checks);
             setState("setup");
@@ -83,11 +94,23 @@ function RequireAuth({ children }: { children: JSX.Element }) {
             setState("ok");
           }
         } catch {
+          if (cancelled) return;
           setState("ok");
         }
       })
-      .catch(() => setState("no"));
-  }, []);
+      .catch((err) => {
+        if (cancelled) return;
+        setState(isAuthRejection(err) ? "no" : "offline");
+      });
+    return () => { cancelled = true; };
+  }, [attempt]);
+
+  // Retry automatically while the server is temporarily unavailable.
+  useEffect(() => {
+    if (state !== "offline") return;
+    const t = setTimeout(() => setAttempt((n) => n + 1), 5000);
+    return () => clearTimeout(t);
+  }, [state, attempt]);
 
   if (state === "loading") {
     return (
@@ -104,12 +127,25 @@ function RequireAuth({ children }: { children: JSX.Element }) {
       >
         <span>
           <span className="spin" style={{ marginRight: 8 }} />
-          AUTHENTICATING...
+          正在验证登录…
         </span>
       </div>
     );
   }
   if (state === "no") return <Navigate to="/login" replace />;
+  if (state === "offline") {
+    return (
+      <div style={{ display: "grid", placeItems: "center", height: "100%", background: "var(--bg)", padding: 24 }}>
+        <div style={{ textAlign: "center", maxWidth: 360 }}>
+          <div style={{ fontSize: 16, fontWeight: 600, color: "var(--t)", marginBottom: 8 }}>暂时连不上服务器</div>
+          <div style={{ fontSize: 13, color: "var(--t3)", lineHeight: 1.7, marginBottom: 16 }}>
+            可能是网络波动，或服务正在重启。连接恢复后将重新验证登录状态。
+          </div>
+          <button className="tbtn" onClick={() => { setState("loading"); setAttempt((n) => n + 1); }}>立即重试</button>
+        </div>
+      </div>
+    );
+  }
   if (state === "setup" && setupChecks) return <Setup checks={setupChecks} />;
   return (
     <AuthCtx.Provider value={auth}>

@@ -8,6 +8,8 @@
 
 ## [Unreleased]
 
+- Port general reliability fixes from upstream IvyeaOps v1.13.11 (21f916a, 6c7823c): reconnect after temporary authentication-check failures, preserve renderable Agent/plugin errors, defer download URL cleanup, and disable unrelated claudecodeui release polling. Existing eMAG workflows and download filenames are retained.
+
 - Add a disabled-by-default admin API for separately approved single-offer eMAG prices, live preflight, durable attempts, no write retries and read-only reconciliation. Local workspace/MCP approvals remain local-only; development performed no live writes.
 
 - Correct eMAG scenario revenue to use the API’s VAT-exclusive sale_price directly; label the gross-price commission assumption and seller price bounds explicitly. Existing inputs are retained.
