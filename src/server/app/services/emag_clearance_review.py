@@ -30,16 +30,19 @@ def build(current, baseline=None):
     comparison = {'status': 'unavailable', 'verified_sales_units': None,
                   'settled_cash': None, 'saleability_verified': False}
     if baseline is not None:
-        emag_operations._issues(baseline)
+        baseline_issues = emag_operations._issues(baseline)
         if (not emag_audit._compatible(current, baseline)
                 or datetime.fromisoformat(baseline['captured_at'].replace('Z', '+00:00'))
                 >= datetime.fromisoformat(current['captured_at'].replace('Z', '+00:00'))):
             raise ValueError('Baseline must be an earlier compatible store/source/coverage snapshot')
         before = {str(o['id']): (i, o) for i, o in enumerate(baseline['data']['offers'])}
-        products, mismatches, disappeared, deltas = [], [], [], []
+        products, mismatches, disappeared, deltas, newly_blocked = [], [], [], [], []
         blockers = {}
         for issue in issues:
             blockers.setdefault(str(issue['id']), []).append(issue['reason'])
+        baseline_blockers = {}
+        for issue in baseline_issues:
+            baseline_blockers.setdefault(str(issue['id']), []).append(issue['reason'])
         unknown = 0
         for key in sorted(before.keys() & indexed.keys()):
             bi, old = before[key]
@@ -60,16 +63,23 @@ def build(current, baseline=None):
             cleared = 2 in old_price and new_price and all(type(v) is int and v == 1 for v in new_price)
             if cleared:
                 disappeared.append(key)
+            prior = sorted(baseline_blockers.get(key, []))
+            current_blockers = sorted(blockers.get(key, []))
+            added = sorted(set(current_blockers) - set(prior))
+            if 'blocked' in added:
+                newly_blocked.append(key)
             products.append({'offer_id': key, 'sku': new.get('part_number'),
                              'stock_before': old_stock if emag_clearance.known_stock(old_stock) else None,
                              'stock_after': new_stock if emag_clearance.known_stock(new_stock) else None,
-                             'stock_decrease': delta, 'current_blockers': blockers.get(key, []),
+                             'stock_decrease': delta, 'current_blockers': current_blockers,
+                             'baseline_blockers': prior, 'new_blockers': added,
                              'baseline_field_path': f'/data/offers/{bi}', 'field_path': f'/data/offers/{ci}'})
         comparison.update(status='available', baseline_snapshot_id=baseline['snapshot_id'],
                           baseline_captured_at=baseline['captured_at'], products=products,
                           identity_mismatches=mismatches, unknown_stock_comparisons=unknown,
                           net_stock_decrease=sum(deltas) if deltas else None,
                           price_rejection_no_longer_observed=disappeared,
+                          newly_blocked_products=newly_blocked,
                           not_observed_now=sorted(before.keys() - indexed.keys()),
                           newly_observed=sorted(indexed.keys() - before.keys()))
     return {'store_id': current['store_id'], 'snapshot_id': current['snapshot_id'],

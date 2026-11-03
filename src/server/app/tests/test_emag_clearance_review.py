@@ -74,6 +74,24 @@ def test_mcp_read_scope_and_optional_argument_validation(monkeypatch):
         assert asyncio.run(mcp._call_tool('ivyea_emag_clearance_review',args))['isError']
 
 
+def test_new_and_preexisting_blockers_are_distinguished():
+    row=offer();row['validation_status']=[{'value':10}]
+    fresh=service.build(snap([row]),snap([offer()],True))['comparison']
+    existing=service.build(snap([row]),snap([deepcopy(row)],True))['comparison']
+    assert fresh['newly_blocked_products']==['1']
+    assert existing['newly_blocked_products']==[]
+    assert fresh['products'][0]['new_blockers']==['blocked']
+    assert existing['products'][0]['new_blockers']==[]
+    assert existing['products'][0]['baseline_blockers']==['blocked','invalid_price']
+
+
+@pytest.mark.parametrize('status',[None,{}, {'value':True},{'value':9},[{'value':1},{'value':2}]])
+def test_absent_or_invalid_price_status_does_not_prove_cleared(status):
+    row=offer();row['offer_validation_status']=status
+    comparison=service.build(snap([row]),snap([offer()],True))['comparison']
+    assert comparison['price_rejection_no_longer_observed']==[]
+
+
 def test_http_admin_boundary(monkeypatch):
     import importlib
     from fastapi import FastAPI

@@ -12,3 +12,5 @@ Spec: docs/superpowers/specs/2026-11-03-clearance-followup-design.md
 - [ ] Verify focused tests, full app/tests, lint, docs; independent review; fix once; CI, PR, merge and deploy under standing authorization.
 
 Baseline: 13 focused assertions passed, but pytest session teardown failed on an existing inaccessible global temp junction. Use a task-owned --basetemp rather than modifying user temp data. No dependencies changed, so dependency baseline unchanged. Ruling: implement a read-only review and portable workflow first, not a browser-write HTTP endpoint; persistent backend browser execution needs a separate ownership and uncertain-delivery contract. Cost: execution still requires an agent with approved browser access.
+
+Independent review: one P2 missing baseline-blocker comparison reproduced by a failing test. Fixed with baseline_blockers/new_blockers and newly_blocked_products. Added five invalid/missing price-status cases. Focused suite 30 passed; initial full app suite 521 passed before these fixes. No additional important review findings; live platform behavior and storefront/settlement remain outside static code verification.
