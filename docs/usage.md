@@ -144,3 +144,7 @@ Operators can follow issue links or create a local source-bound playbook draft f
 
 
 Price-basis correction: previous scenario results treated raw sale_price as VAT-inclusive and could understate net revenue. Inputs and historical reports are preserved; current scenarios recalculate using the corrected contract. The official API defines recommended_price as pre-discount recommended retail price, and min_sale_price/max_sale_price as seller limits; none is a verified recovery threshold. See https://marketplace-api.emag.ro/api-doc.
+
+### Clearance follow-up
+
+Administrator `GET /api/emag/stores/{store_id}/clearance-review?baseline_snapshot_id=...` and read-scope MCP `ivyea_emag_clearance_review` return imported-stock priorities and an optional explicit earlier baseline comparison. Omit the baseline to inspect the queue only. The queue is not approval; stock decrease and disappeared price rejection do not prove sales, storefront availability or settled cash. Source and coverage must match, capture time must advance, and SKU/PNK mismatches are excluded. Use [the portable price-validation skill](../skills/emag/price-validation/SKILL.md) with separately authorized browser tools; no browser-write endpoint is added.
