@@ -2,12 +2,23 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { createDemoState } from './state.mjs';
+import { demoReply } from './reply.mjs';
 
 test('demo document denies network connections and form submission', () => {
   const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
   assert.match(html, /connect-src 'none'/);
   assert.match(html, /form-action 'none'/);
   assert.match(html, /object-src 'none'/);
+});
+
+test('workbench demo replies identify synthetic scope and never claim a model or platform write', () => {
+  const data = createDemoState().request('GET', '/emag/stores/demo-ro/workspace');
+  const reply = demoReply(data);
+  assert.match(reply, /演示回复/);
+  assert.ok(reply.includes('demo-ro'));
+  assert.ok(reply.includes('demo-v1'));
+  assert.match(reply, /不连接/);
+  assert.match(reply, /未执行/);
 });
 
 test('demo exposes only synthetic stores and resets after reload', () => {

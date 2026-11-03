@@ -6,6 +6,12 @@ The optional [single-offer price API](emag-write-readiness.md#single-offer-price
 
 ## Daily workflow
 
+After login, `/workbench` opens a compact store overview with four evidence metrics, up to five prioritized checks and a permanent Agent conversation. More opens detailed tools and account settings. The view is designed for a desktop screen; narrow screens switch between Overview, Suggestions and Conversation without clearing the conversation.
+
+Analyze prefills a question with the selected store, snapshot and exact product references; only Send calls the configured Agent. An existing conversation remains bound to its original store and snapshot after changing the overview store. Start a new conversation for the selected store explicitly, after waiting for or stopping an active task. History lists this browser's per-user store/session references, not a complete cross-device history.
+
+The public Pages demo uses the same compact layout with labelled preset replies, no real model calls and memory-only history. Its More menu exposes only supported demo detail pages; refresh resets all demo conversations.
+
 The project site includes an interactive eMAG demo built from the workbench components. It uses fictional data and an in-memory mock; refresh resets its changes. The demo cannot connect to a backend and does not provide real marketplace operations. Its interface is currently mostly Chinese. The source installation remains separate.
 
 1. Collect or explicitly import an eMAG RO snapshot.

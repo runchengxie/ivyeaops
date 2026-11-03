@@ -1659,6 +1659,17 @@ export function installMockApi(): void {
     if (ms) await new Promise((r) => setTimeout(r, ms));
     const full = (config.baseURL || "/api").replace(/^\/api/, "") + (config.url || "");
     ((window as any).__harnessRequests ||= []).push(full);
+    // Compact workbench fixtures exercise store switching without real credentials.
+    const workbenchCase = new URLSearchParams(location.search).get('wbcase');
+    if (workbenchCase === 'list-retry' && full === '/emag/stores' && !(window as any).__harnessListRecovered) throw Object.assign(new Error('Synthetic store list unavailable'), { response: { status: 503 } });
+    if (workbenchCase === 'multi' && full === '/emag/stores') return { ...reply(config), data: [{ store_id: 'demo-ro' }, { store_id: 'second-ro' }] };
+    if (workbenchCase === 'multi' && full === '/ivyea-agent/chat/sessions/fail-b') throw Object.assign(new Error('Synthetic history unavailable'), { response: { status: 404 } });
+    if (workbenchCase === 'offline' && full.endsWith('/workspace')) throw Object.assign(new Error('Synthetic snapshot unavailable'), { response: { status: 503 } });
+    if (workbenchCase === 'multi' && full === '/emag/stores/second-ro/workspace') {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      const response = reply({ ...config, url: '/emag/stores/demo-ro/workspace' });
+      return { ...response, data: { ...(response.data as any), store_id: 'second-ro', snapshot_id: 'second-snapshot', offers: [{ id: 22, name: 'Second store item', part_number: 'SECOND-SKU', general_stock: 7 }], issues: [{ id: 22, issue_id: 'second-issue', reason: 'blocked', general_stock: 7 }] } };
+    }
     // Exercise the real auth guard against temporary outages and explicit rejection.
     if (full === '/auth/me') {
       const scenario = new URLSearchParams(location.search).get('authcase');
@@ -2064,6 +2075,7 @@ export function installMockApi(): void {
   window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === "string" ? input : input.toString();
     if (url.startsWith("/api/assistant/chat")) {
+      try { (window as any).__lastFallbackChatBody = JSON.parse(String(init?.body || '{}')); } catch { /* Keep invalid test bodies observable as missing. */ }
       return Promise.resolve(sse(["兜底通道", "答的这一段。"]));
     }
     if (/\/api\/ivyea-agent\/chat\/sessions\/[^/]+\/live/.test(url)) {

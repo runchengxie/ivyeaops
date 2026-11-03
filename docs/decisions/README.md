@@ -18,6 +18,7 @@ git log 记得住「改了什么」，记不住「为什么不选另一条路」
 
 | 编号 | 决策 | 日期 |
 |---|---|---|
+| [0053](./0053-compact-store-workbench.md) | Compact store workbench and scoped conversation | 2026-11-04 |
 | [0052](./0052-separate-emag-price-api.md) | Separate approved eMAG price execution | 2026-10-31 |
 | [0051](./0051-existing-stock-clearance.md) | Existing-stock clearance priorities | 2026-10-31 |
 | [0050](./0050-procurement-revision-archive.md) | Procurement revision archive | 2026-10-31 |

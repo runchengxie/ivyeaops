@@ -298,6 +298,10 @@ function uid() {
  */
 export type ConsoleEmbedProps = {
   embedded?: boolean;
+  contextText?: string;
+  promptDraft?: { id: number; text: string };
+  onBusyChange?: (busy: boolean) => void;
+  queueScope?: string;
   /** 嵌入模式下要打开的历史会话（外壳的历史列表选中的那条）。 */
   sessionId?: string;
   /** 会话 id 变化时回传给外壳（它要拿来高亮历史列表）。 */
@@ -307,7 +311,7 @@ export type ConsoleEmbedProps = {
 };
 
 function ConsoleInner({ embedded = false, sessionId: embedSession = "",
-                        onSessionChange, resetSignal = 0 }: ConsoleEmbedProps = {}) {
+                        onSessionChange, resetSignal = 0, contextText = "", promptDraft, onBusyChange, queueScope = "" }: ConsoleEmbedProps = {}) {
   const notify = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -329,6 +333,13 @@ function ConsoleInner({ embedded = false, sessionId: embedSession = "",
   const stoppingRef = useRef(false);
   /** 这一轮是被停掉的 —— 收尾时据此跳过跟进建议。 */
   const cancelledRef = useRef(false);
+  useEffect(() => { onBusyChange?.(busy); }, [busy, onBusyChange]);
+  const draftSeen = useRef<number>();
+  useEffect(() => {
+    if (!promptDraft || draftSeen.current === promptDraft.id || busy) return;
+    draftSeen.current = promptDraft.id;
+    setComposer(current => ({ ...current, text: promptDraft.text }));
+  }, [promptDraft, busy]);
   /** 已经从盘上恢复过待发队列的那个会话格子。没恢复完不许写盘（见下面两个 effect）。 */
   const restoredQueueRef = useRef<string>("");
   const [sessionId, setSessionId] = useState("");
@@ -915,7 +926,7 @@ function ConsoleInner({ embedded = false, sessionId: embedSession = "",
     prior: Turn[], text: string, aiId: string, signal: AbortSignal,
   ): Promise<boolean> => {
     const msgs: ChatMsg[] = [
-      { role: "system", content: FALLBACK_SYSTEM },
+      { role: "system", content: [FALLBACK_SYSTEM, contextText].filter(Boolean).join("\n\n") },
       ...prior
         .filter((t) => t.text.trim() && !t.failed)
         .slice(-10)                       // 兜底通道没有会话库，带太多只是白烧 token
@@ -938,7 +949,7 @@ function ConsoleInner({ embedded = false, sessionId: embedSession = "",
       return false;                       // 兜底也不通：交回上层按原来的错误报
     }
     return got.trim().length > 0;
-  }, [patchTurn]);
+  }, [patchTurn, contextText]);
 
   // ── 发一轮 ───────────────────────────────────────────────────────────────
   const send = useCallback(async (raw?: string) => {
@@ -1121,6 +1132,7 @@ function ConsoleInner({ embedded = false, sessionId: embedSession = "",
           // 人设排最前：它定义"以什么身份、什么判断标准作答"，逻辑上先于本轮材料。
           system: [
             FALLBACK_SYSTEM,
+            contextText,
             composer.system ? "[角色设定 —— 按这个身份和判断标准作答]\n" + composer.system : "",
             visionSystem,
             imageRefSystem,
@@ -1210,7 +1222,7 @@ function ConsoleInner({ embedded = false, sessionId: embedSession = "",
     // images / picked 必须在依赖里：send 里读了它们。漏掉的话这个回调会闭包住
     // 旧值 —— 贴完图不打字直接发，图就丢了（之前靠"总会先打字"侥幸没暴露）。
   }, [composer, busy, sessionId, images, docs, picked, agentTakesAttachments,
-      patchTurn, notify, loadFollowUps]);
+      patchTurn, notify, loadFollowUps, contextText, fallbackChat]);
 
   /**
    * 点正文里的图 → 收进输入框，作为下一轮的原图。
@@ -1299,7 +1311,8 @@ function ConsoleInner({ embedded = false, sessionId: embedSession = "",
   // 读盘：打开/切到一条会话时，把上次没发出去的接回来。
   // 放进队列即可 —— 补发那条 effect 会在不忙的时候把它们发出去。
   useEffect(() => {
-    const key = QUEUE_KEY + ":" + (sessionId || "new");
+    if (queueScope && !sessionId) return;
+    const key = QUEUE_KEY + ":" + (queueScope ? queueScope + ":" : "") + (sessionId || "new");
     let saved: QueuedFollowUp[] = [];
     try { saved = JSON.parse(localStorage.getItem(key) || "[]"); } catch { /* 读不出就当没有 */ }
     if (Array.isArray(saved) && saved.length) {
@@ -1315,12 +1328,13 @@ function ConsoleInner({ embedded = false, sessionId: embedSession = "",
     // 那份删掉，紧接着才去读 —— 读到的自然是空的，于是关页面前排的那几句
     // 每次都恰好在恢复前一刻被自己抹掉（这条是 E2E 当场抓出来的）。
     restoredQueueRef.current = key;
-  }, [sessionId]);
+  }, [sessionId, queueScope]);
 
   // 写盘：队列一变就存（按会话分格；没有会话 id 时用一个通用格子，
   // 因为那种情况下这句话本来就是要当成"下一轮"发出去的）。
   useEffect(() => {
-    const key = QUEUE_KEY + ":" + (sessionId || "new");
+    if (queueScope && !sessionId) return;
+    const key = QUEUE_KEY + ":" + (queueScope ? queueScope + ":" : "") + (sessionId || "new");
     if (restoredQueueRef.current !== key) return;      // 见上面那段：先恢复，后写盘
     try {
       // 已经被这一轮收下的（injected）属于那一轮，不进待发盘 —— 留着的话刷新之后
@@ -1329,7 +1343,7 @@ function ConsoleInner({ embedded = false, sessionId: embedSession = "",
       if (keep.length) localStorage.setItem(key, JSON.stringify(keep));
       else localStorage.removeItem(key);
     } catch { /* 存不下就退回内存态，不该打扰用户 */ }
-  }, [queue, sessionId]);
+  }, [queue, sessionId, queueScope]);
 
   /** 回答一张选项卡。答不上去（超时/已被别的页签答了）就照实说，别装作点成功了。 */
   const answerQuestion = useCallback(async (
