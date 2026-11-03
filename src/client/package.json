@@ -28,6 +28,7 @@
     "test:followups": "node e2e/followups.mjs",
     "test:citation": "node e2e/citation-restatement.mjs",
     "test:reattach": "node e2e/live-reattach.mjs",
+    "test:workbench": "node --test e2e/simple-workbench.test.mjs",
     "test:reliability": "node --test e2e/upstream-reliability.test.mjs",
     "test:render": "node --test e2e/render-contract.test.mjs"
   },

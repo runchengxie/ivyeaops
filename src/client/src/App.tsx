@@ -40,6 +40,7 @@ const Capabilities = lazy(() => import("./pages/workbench/Capabilities"));
 const Approvals = lazy(() => import("./pages/workbench/Approvals"));
 const Schedules = lazy(() => import("./pages/workbench/Schedules"));
 const EmagOperations = lazy(() => import("./pages/workbench/EmagOperations"));
+const SimpleWorkbench = lazy(() => import("./pages/workbench/StoreWorkbench"));
 const EmagWorkspace = lazy(() => import("./pages/workbench/EmagWorkspace"));
 const EmagNews = lazy(() => import("./pages/workbench/EmagNews"));
 import { landingPath } from "./lib/navRegistry";
@@ -186,10 +187,9 @@ export default function App() {
               </RequireAuth>
             }
           >
-            {/* "/" 只做落地分流：新外壳去任务台，经典外壳照旧进运营驾驶舱。
-                驾驶舱本身搬到 /dashboard，两套外壳都能稳定链过去，老书签落到
-                "/" 也还是会被送到该去的地方。 */}
+            {/* Daily landing is the compact store workbench; detail routes remain available. */}
             <Route index element={<Navigate to={landingPath()} replace />} />
+            <Route path="workbench" element={<SimpleWorkbench />} />
             <Route path="console" element={<Console />} />
             <Route path="capabilities" element={<Capabilities />} />
             <Route path="approvals" element={<Approvals />} />

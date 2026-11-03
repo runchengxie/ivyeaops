@@ -188,6 +188,9 @@ jobs:
       - name: Typecheck
         working-directory: src/client
         run: npm run typecheck
+      - name: Compact workbench regressions
+        working-directory: src/client
+        run: npm run test:workbench
       - name: Upstream reliability regressions
         working-directory: src/client
         run: npm run test:reliability

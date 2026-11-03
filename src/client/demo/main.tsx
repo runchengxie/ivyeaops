@@ -1,12 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { MemoryRouter, NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, NavLink, Navigate, Route, Routes, useLocation, Link } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { api } from '../src/api/client';
 import EmagOperations from '../src/pages/workbench/EmagOperations';
 import EmagWorkspace from '../src/pages/workbench/EmagWorkspace';
 import { createDemoState } from './state.mjs';
 import './style.css';
+import SimpleWorkbench from '../src/pages/workbench/SimpleWorkbench';
+import DemoWorkbenchChat from './DemoWorkbenchChat';
 
 const state = createDemoState();
 api.defaults.adapter = async config => {
@@ -27,9 +29,14 @@ const pages = [
   ['/listing', 'Listing 工作台', '▤'], ['/tools', '分析工具', '▦'],
 ] as const;
 
-function Demo() {
-  return <MemoryRouter initialEntries={['/dashboard']}>
+function DemoShell() {
+  const location = useLocation();
+  const compact = location.pathname === "/workbench";
+  return <>
+    <div style={{ display: compact ? "contents" : "none" }}><SimpleWorkbench demo ChatComponent={DemoWorkbenchChat} /></div>
+    {!compact && <>
     <div className="demo-layout">
+      <Link className="demo-return" to="/workbench">← 返回店铺工作台</Link>
       <aside className="demo-sidebar">
         <div className="brand"><span className="brand-mark">i</span><span>ivyeaops<small>模拟工作台</small></span></div>
         <div className="sidebar-label">模拟工作区</div>
@@ -51,7 +58,8 @@ function Demo() {
         </Routes></div>
       </div>
     </div>
-  </MemoryRouter>;
+    </>}
+  </>;
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><Demo/></React.StrictMode>);
+ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><MemoryRouter initialEntries={['/workbench']}><DemoShell/></MemoryRouter></React.StrictMode>);

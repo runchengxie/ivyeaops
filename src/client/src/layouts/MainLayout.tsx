@@ -24,6 +24,7 @@ import {
 // and only fetched on first visit — keeps the initial bundle small.
 const Terminal = lazy(() => import("../pages/workbench/Terminal"));
 const Agents = lazy(() => import("../pages/workbench/Agents"));
+const SimpleWorkbench = lazy(() => import("../pages/workbench/StoreWorkbench"));
 const EmagWorkspace = lazy(() => import("../pages/workbench/EmagWorkspace"));
 import EmagContext from "../components/EmagContext";
 
@@ -53,6 +54,7 @@ import { TOURS, hasTour } from "../lib/tours";
 // Which paths belong here now comes from lib/navRegistry (`keepAlive` /
 // `persistent` flags) — this map only says *how* to render each one.
 const KEEP_ALIVE_BOARDS: Record<string, () => ReactElement> = {
+  "/workbench": () => <SimpleWorkbench />,
   "/market": () => <EmagWorkspace mode="market" />,
   "/playbook": () => <EmagWorkspace mode="playbook" />,
   "/tools": () => <EmagWorkspace mode="tools" />,
@@ -85,6 +87,7 @@ type UpdateInfo = {
 
 export default function MainLayout() {
   const location = useLocation();
+  const isCompactWorkbench = location.pathname === "/workbench";
   const navigate = useNavigate();
   const { role, username, permissions } = useAuth();
   const isAdmin = role === "admin";
@@ -466,10 +469,10 @@ export default function MainLayout() {
   );
 
   return (
-    <div className="app">
+    <div className={"app" + (isCompactWorkbench ? " workbench-shell" : "")}>
       {/* SIDEBAR */}
       {isMobile && mobileMenu && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 998 }} onClick={() => setMobileMenu(false)} />}
-      <aside
+      {!isCompactWorkbench && <aside
         className={"sb" + (collapsed && !mobileMenu ? " collapsed" : "") + (dragging ? " sb-dragging" : "")}
         style={isMobile
           // 手机抽屉：**宽度和隐藏位移必须联动**。原来写死 196px 配 -200px 位移，
@@ -599,7 +602,7 @@ export default function MainLayout() {
             aria-orientation="vertical"
           />
         )}
-      </aside>
+      </aside>}
 
       {/* MAIN */}
       <div className="main">
@@ -685,7 +688,7 @@ export default function MainLayout() {
 
       {/* 任务台本身就是 Agent 的主入口，右下角再挂一个悬浮球等于同一件事摆两遍。
           其余板块保留 —— 在那儿它是"随手问一句"的快捷方式，仍然有用。 */}
-      {location.pathname !== "/console" && <IvyeaAgentDock />}
+      {location.pathname !== "/console" && !isCompactWorkbench && <IvyeaAgentDock />}
     </div>
   );
 }

@@ -64,6 +64,7 @@ export type BoardEntry = {
  * 侧边栏必须和改造前长得一模一样。
  */
 export const BOARDS: BoardEntry[] = [
+  { to: "/workbench", icon: "home", label: "店铺工作台", group: "tools", legacySection: "工具", pathLabel: "~/店铺工作台", ready: true, fullPage: true, keepAlive: true },
   { to: "/emag", icon: "home", label: "eMAG 巡检", group: "tools", legacySection: "工具", pathLabel: "~/eMAG 巡检", admin: true, ready: true },
   // ── 新壳一级项 ────────────────────────────────────────────────────────────
   {
@@ -322,10 +323,7 @@ export function writeShellMode(mode: ShellMode): void {
   try { localStorage.setItem(SHELL_KEY, mode); } catch { /* ignore */ }
 }
 
-/**
- * 登录后的落地页。新外壳落到任务台；退回经典外壳的人还是落到运营驾驶舱 ——
- * 和改造前看到的第一屏一模一样。
- */
+/** Both shell preferences use the compact everyday store workbench. */
 export function landingPath(): string {
-  return readShellMode() === "classic" ? "/dashboard" : "/console";
+  return "/workbench";
 }
