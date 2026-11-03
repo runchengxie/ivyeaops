@@ -298,6 +298,7 @@ function uid() {
  */
 export type ConsoleEmbedProps = {
   embedded?: boolean;
+  minimal?: boolean;
   contextText?: string;
   promptDraft?: { id: number; text: string };
   onBusyChange?: (busy: boolean) => void;
@@ -311,7 +312,7 @@ export type ConsoleEmbedProps = {
 };
 
 function ConsoleInner({ embedded = false, sessionId: embedSession = "",
-                        onSessionChange, resetSignal = 0, contextText = "", promptDraft, onBusyChange, queueScope = "" }: ConsoleEmbedProps = {}) {
+                        onSessionChange, resetSignal = 0, contextText = "", promptDraft, onBusyChange, queueScope = "", minimal = false }: ConsoleEmbedProps = {}) {
   const notify = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -1524,6 +1525,8 @@ function ConsoleInner({ embedded = false, sessionId: embedSession = "",
       onModelDefault={setModelAsDefault}
       autoFocus={!compact}
       compact={compact}
+      minimal={minimal}
+      placeholder={minimal ? "问问店铺情况，或选择左侧的问题…" : undefined}
     />
   );
 
@@ -1545,7 +1548,7 @@ function ConsoleInner({ embedded = false, sessionId: embedSession = "",
                 44px 的 logo + 24px 大标题会把输入框顶到看不见的地方。 */}
             <div className="cc-hero-brand">
               {!embedded && <img src="/ivyea-logo.png" alt="Ivyea" className="cc-hero-logo" />}
-              <h1 className="cc-hero-title">{embedded ? "有什么可以帮你？" : "意念所至，行动随行"}</h1>
+              <h1 className="cc-hero-title">{minimal ? "想先了解什么？" : embedded ? "有什么可以帮你？" : "意念所至，行动随行"}</h1>
             </div>
             <div className="cc-hero-composer">{composerNode(false)}</div>
             {!embedded && scenes.length > 0 && (

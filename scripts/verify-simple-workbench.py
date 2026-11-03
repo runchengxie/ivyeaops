@@ -47,7 +47,7 @@ def main():
             page.screenshot(path=str(OUTPUT / f"desktop-{width}.png"))
             results[f"layout_{width}"] = measured
 
-        page.get_by_role('button', name='让 AI 分析').first.click()
+        page.get_by_role('button', name='问助手').first.click()
         textarea = page.locator('.sw-chat-body textarea')
         page.wait_for_function("document.querySelector('.sw-chat-body textarea').value.includes('demo-ro')")
         assert 'demo-ro' in textarea.input_value()
@@ -68,7 +68,7 @@ def main():
         page.wait_for_function("!document.querySelector('.sw-scope-warning button').disabled")
         page.get_by_role('button', name='为 second-ro 新建对话').click()
         page.wait_for_function("document.querySelector('.sw-chat-scope').textContent.includes('second-ro')")
-        page.get_by_role('button', name='让 AI 分析').first.click()
+        page.get_by_role('button', name='问助手').first.click()
         page.wait_for_function("document.querySelector('.sw-chat-body textarea').value.includes('SECOND-SKU')")
         assert 'SECOND-SKU' in textarea.input_value()
         page.locator('.sw-chat-body .cc-send').click()
@@ -79,7 +79,7 @@ def main():
         page.wait_for_function("!document.querySelector('.sw-chat-actions button').disabled")
         results['scope_prefill_send_stop'] = True
 
-        page.get_by_role('link', name='查看详情').first.click()
+        page.get_by_role('link', name='详情').first.click()
         page.get_by_role('heading', name='eMAG 店铺巡检', exact=False).wait_for()
         page.go_back()
         page.get_by_role('heading', name='店铺工作台', exact=True).wait_for()
@@ -88,7 +88,7 @@ def main():
 
         visit(page, width=390, height=844)
         page.get_by_role('button', name='建议', exact=True).click()
-        page.get_by_role('button', name='让 AI 分析').first.click()
+        page.get_by_role('button', name='问助手').first.click()
         assert page.get_by_role('button', name='对话', exact=True).get_attribute('aria-pressed') == 'true'
         textarea = page.locator('.sw-chat-body textarea')
         page.wait_for_function("document.querySelector('.sw-chat-body textarea').value.includes('demo-ro')")
@@ -115,7 +115,7 @@ def main():
         results['store_list_retry_recovers'] = True
         visit(page, query='agentdown=1')
         page.locator('.sw-chat-body textarea').wait_for()
-        page.get_by_role('button', name='让 AI 分析').first.click()
+        page.get_by_role('button', name='问助手').first.click()
         page.locator('.sw-chat-body .cc-send').click()
         page.wait_for_function('window.__lastFallbackChatBody?.messages')
         fallback = page.evaluate('window.__lastFallbackChatBody.messages[0].content')

@@ -44,7 +44,9 @@ export function workbenchContext(data) {
 }
 
 export function suggestionPrompt(data, item) {
-  return `请分析店铺 ${data.store_id} 的这项调整建议。\n来源快照：${data.snapshot_id}（${data.captured_at}）。\n商品 ID：${item.offerId}；SKU：${item.sku || '未采集'}；商品：${item.name}。\n异常引用：${item.issueId || '无独立异常引用'}。\n观察：${item.reason}；库存：${item.stock ?? '未知'}。\n建议核查方向：${item.action}。\n请核实依据、说明缺口和下一步，不执行平台写入。`;
+  return `「${item.name}」${item.reason}，应该先怎么处理？
+店铺 ${data.store_id} · 商品 ${item.offerId} / ${item.sku || 'SKU 未采集'} · 库存 ${item.stock ?? '未知'}。
+请根据资料 ${data.snapshot_id}（${data.captured_at}）、问题 ${item.issueId || '暂无独立引用'} 核对原因并给出下一步建议，先不执行操作。`;
 }
 
 /** Local history stores only explicit session/scope references, never evidence bodies. */

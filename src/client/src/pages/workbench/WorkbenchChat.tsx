@@ -24,7 +24,7 @@ export default function WorkbenchChat({ data, store, promptDraft, onBusyChange, 
   const [busy, setBusy] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [history, setHistory] = useState<History[]>([]);
-  const [status, setStatus] = useState('正在检查 Agent 连接…');
+  const [status, setStatus] = useState('正在连接…');
   const busyRef = useRef(false);
 
   useEffect(() => {
@@ -37,8 +37,8 @@ export default function WorkbenchChat({ data, store, promptDraft, onBusyChange, 
   useEffect(() => {
     let alive = true;
     const check = () => ivyeaAgentStatus().then(result => {
-      if (alive) setStatus(result.available ? 'Agent 已连接' : 'Agent 未就绪 · 可检查设置或尝试备用对话');
-    }).catch(() => { if (alive) setStatus('Agent 连接状态未知'); });
+      if (alive) setStatus(result.available ? '已连接' : '暂未连接，可在设置中检查');
+    }).catch(() => { if (alive) setStatus('连接状态未知'); });
     void check();
     const timer = setInterval(check, 30000);
     return () => { alive = false; clearInterval(timer); };
@@ -88,15 +88,15 @@ export default function WorkbenchChat({ data, store, promptDraft, onBusyChange, 
   const mismatch = !!scope && scope.storeId !== store;
   const scopedDraft = !mismatch && promptDraft && promptDraft.id > draftCutoff && promptDraft.storeId === scope?.storeId ? promptDraft : undefined;
   return <section className="sw-chat" aria-label="AI 店铺助手">
-    <header className="sw-panel-head"><div><span className="sw-eyebrow">AI ASSISTANT</span><h2>店铺助手</h2></div><div className="sw-chat-actions">
+    <header className="sw-panel-head"><div><h2>店铺助手</h2></div><div className="sw-chat-actions">
       <button type="button" disabled={busy || !data} onClick={newConversation}>新对话</button>
       <button type="button" aria-expanded={historyOpen} disabled={busy} onClick={() => setHistoryOpen(value => !value)}>历史</button>
     </div></header>
-    <div className="sw-chat-status"><span className="sw-status-dot" />{status}</div>
-    {scope && <div className="sw-chat-scope">对话店铺 <strong>{scope.storeId}</strong><span title={scope.snapshotId}>快照 {scope.snapshotId}</span></div>}
+    <div className="sw-chat-status">{status}</div>
+    {scope && <div className="sw-chat-scope">对话店铺 <strong>{scope.storeId}</strong><details className="sw-chat-info"><summary>资料</summary><p>采集于 {scope.capturedAt}</p><p>{scope.snapshotId}</p></details></div>}
     {historyError && <div role="alert" className="sw-scope-warning sw-chat-history-error">{historyError}</div>}
     {mismatch && <div role="status" className="sw-scope-warning">当前对话仍属于 {scope?.storeId}。<button type="button" disabled={busy || !data} onClick={newConversation}>为 {store} 新建对话</button>{busy && <span>请先等待或停止当前任务。</span>}</div>}
     {historyOpen && <div className="sw-history" aria-label="本店历史对话"><h3>{store || '尚未选择店铺'} · 历史</h3>{history.filter(item => item.storeId === store).map(item => <button type="button" key={item.sessionId} onClick={() => openHistory(item)}>对话 {item.sessionId.slice(0, 14)}<small>{item.snapshotId} · {item.capturedAt}</small></button>)}{!history.some(item => item.storeId === store) && <p>此浏览器尚未记录本店对话。</p>}</div>}
-    <div className="sw-chat-body">{scope ? <Console key={revision} embedded sessionId={session} onSessionChange={remember} queueScope={JSON.stringify([username, scope.storeId])} contextText={scope.context} promptDraft={scopedDraft} onBusyChange={notifyBusy} /> : <div className="sw-chat-welcome"><h3>和 AI 一起查看店铺</h3><p>读取店铺资料后即可开始。对话将标注所属店铺与证据版本。</p></div>}</div>
+    <div className="sw-chat-body">{scope ? <Console key={revision} embedded minimal sessionId={session} onSessionChange={remember} queueScope={JSON.stringify([username, scope.storeId])} contextText={scope.context} promptDraft={scopedDraft} onBusyChange={notifyBusy} /> : <div className="sw-chat-welcome"><h3>和 AI 一起查看店铺</h3><p>读取店铺资料后即可开始。对话将标注所属店铺与证据版本。</p></div>}</div>
   </section>;
 }

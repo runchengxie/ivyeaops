@@ -8,6 +8,8 @@
 
 ## [Unreleased]
 
+- Simplify the store workbench with neutral styling, three visible priorities, shorter questions and plain send/stop controls. Move model/workspace/attachment controls behind Options while retaining visible effective approval, goal and persona state; full Console defaults remain unchanged.
+
 - Add a compact default store workbench with evidence metrics, prioritized checks and a permanent scoped Agent conversation. Preserve detail tools, live conversation/stop behavior and mobile tabs. Publish the same layout in the isolated Pages demo with labelled synthetic replies, no backend/model connection and reset-on-refresh history.
 
 - Port general reliability fixes from upstream IvyeaOps v1.13.11 (21f916a, 6c7823c): reconnect after temporary authentication-check failures, preserve renderable Agent/plugin errors, defer download URL cleanup, and disable unrelated claudecodeui release polling. Existing eMAG workflows and download filenames are retained.
