@@ -31,7 +31,7 @@
 
 ### Task 3: Integration and delivery
 - [x] Update changelogs and record upstream provenance.
-- [ ] Run backend lint/tests, frontend checks, dependency audit and real App harness browser verification.
+- [x] Run backend lint/tests, frontend checks, dependency audit and real App harness browser verification.
 - [ ] Review whole branch, resolve material findings, push PR and merge when checks pass.
 - [ ] Sync main, restart specifically identified local service and verify health; clean only this task's safe temporary branch/worktree.
 
@@ -42,4 +42,4 @@
 - Browser: real App harness in isolated Edge passed transient failure, offline/recovery, 403 and actual report download; computed offline title is 16px.
 - Independent review: no Critical/Important findings. Deferred minor: provider-level malformed/null/invalid JSON coverage; current helper envelope coverage and adapter inspection passed.
 - Ruling: keep the outage fixture failed until explicitly restored, because StrictMode repeats initial checks; no product behavior change.
-- App suite and hosted CI are pending at initial commit; results recorded in the PR before merge.
+- App suite: 527 passed. Integration found duplicate OpenAPI operation IDs in the upstream multi-method stub; a failing schema regression proved the issue, then separate per-method registrations passed 21 compatibility/schema/permission tests without the warning. Hosted CI must pass on the final head before merge.

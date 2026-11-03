@@ -12,8 +12,11 @@ def list_plugins() -> dict:
     return {"plugins": []}
 
 
-@router.api_route("/{rest:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
 def plugin_unsupported(rest: str) -> JSONResponse:
     return JSONResponse(status_code=501, content={
         "error": "The native backend does not support claudecodeui plugins.",
     })
+
+
+for method in ("GET", "POST", "PUT", "PATCH", "DELETE"):
+    router.add_api_route("/{rest:path}", plugin_unsupported, methods=[method])

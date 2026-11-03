@@ -29,3 +29,13 @@ def test_plugin_stub_lists_empty_and_rejects_mutations():
     response = client.post("/api/agents/plugins/install", json={"url": "unused"})
     assert response.status_code == 501
     assert isinstance(response.json()["error"], str)
+
+
+def test_plugin_methods_have_distinct_openapi_operation_ids():
+    from app.agents.routers.plugins import router
+
+    app = FastAPI()
+    app.include_router(router, prefix="/plugins")
+    operations = app.openapi()["paths"]["/plugins/{rest}"]
+    identifiers = [operation["operationId"] for operation in operations.values()]
+    assert len(identifiers) == len(set(identifiers))
