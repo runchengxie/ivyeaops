@@ -51,3 +51,5 @@ Linux/macOS 使用 `bash scripts/manage.sh install` 和 `bash scripts/manage.sh 
 英文为 canonical，中文同步相同事实和标识。优先文档包括 [eMAG 能力边界与迁移](emag-capability-map.md)、[架构](architecture.md)、[安装](installation.md)、[配置](configuration.md)、[使用](usage.md)、[运维](operations.md)。另见英文[审计记录](../maintenance-audit.md)、[贡献说明](../contributing.md)、[安全策略](../security.md)和[changelog](../changelog.md)。历史决策与内部计划不全部双语。
 
 许可为 [AGPL-3.0](../license)，保留上游归属和许可义务。
+
+- [市场调研与盈利情景](emag-market-research.md)

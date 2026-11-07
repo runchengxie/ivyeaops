@@ -1,0 +1,15 @@
+import {useEffect,useRef,useState} from 'react';
+import {api} from '../../../api/client';
+import {errText} from '../../../lib/errText';
+import en from './en.json';
+import zh from './zh-CN.json';
+type Economics={contribution_ron:string|null;contribution_margin_pct?:string|null;break_even_ex_vat_ron?:string|null;target_sale_ex_vat_ron?:string|null;target_status?:string};
+export default function ProfitCard({store,snapshotId,product,inputs,economics}:{store:string;snapshotId:string;product:string;inputs:Record<string,string|boolean>;economics:Economics}){
+ const [locale,setLocale]=useState<'en'|'zh-CN'>(()=>{try{return localStorage.getItem('emag.research.locale')==='zh-CN'?'zh-CN':'en';}catch{return 'en';}});
+ const catalog:Record<string,string>=locale==='en'?en:zh;const t=(k:string)=>catalog[k]||k;
+ const [price,setPrice]=useState(''),[target,setTarget]=useState(''),[result,setResult]=useState<Economics|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);const generation=useRef(0);
+ useEffect(()=>{generation.current++;setPrice('');setTarget('');setResult(null);setError('');setBusy(false);return()=>{generation.current++;};},[store,snapshotId,product,inputs]);
+ async function calculate(){const epoch=generation.current;setBusy(true);setError('');setResult(null);try{const r=await api.post(`/emag/stores/${encodeURIComponent(store)}/commerce/${encodeURIComponent(product)}/scenario`,{snapshot_id:snapshotId,sale_price:price,inputs:{...inputs,...(target!==''?{target_margin_pct:target}:{})}});if(epoch===generation.current)setResult(r.data.economics);}catch(e){if(epoch===generation.current)setError(errText(e,t('error')));}finally{if(epoch===generation.current)setBusy(false);}}
+ const e=result||economics;
+ return <section data-testid="profit-card"><h3>{t('profit')}</h3><label>{t('language')} <select aria-label="Profit language" value={locale} onChange={event=>{const value=event.target.value as 'en'|'zh-CN';setLocale(value);try{localStorage.setItem('emag.research.locale',value);}catch{}}}><option value="en">English</option><option value="zh-CN">简体中文</option></select></label><p>{t('notProfit')}</p><dl><dt>{t('margin')}</dt><dd>{e.contribution_margin_pct==null?t('unknown'):e.contribution_margin_pct+'%'}</dd><dt>{t('breakEven')}</dt><dd>{e.break_even_ex_vat_ron??t('unknown')} RON</dd><dt>{t('target')}</dt><dd>{e.target_sale_ex_vat_ron??t('unknown')} RON</dd></dl>{e.target_status==='infeasible'&&<p role="status">{t('infeasible')}</p>}<fieldset disabled={busy}><label>{t('scenarioPrice')} <input aria-label={t('scenarioPrice')} type="number" min="0" step="any" value={price} onChange={event=>{setPrice(event.target.value);setResult(null);}}/></label><label>{t('targetMargin')} <input aria-label={t('targetMargin')} type="number" min="0" max="100" step="any" value={target} onChange={event=>{setTarget(event.target.value);setResult(null);}}/></label><button disabled={!price||busy} onClick={()=>void calculate()}>{t('scenario')}</button></fieldset>{error&&<p role="alert">{error}</p>}</section>;
+}

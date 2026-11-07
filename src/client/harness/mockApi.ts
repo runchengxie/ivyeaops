@@ -1,3 +1,4 @@
+import {researchReply} from './researchFixture';
 import clearanceFixture from './clearanceFixture.json';
 import { playbookReply } from './playbookFixture';
 // 验证台的假后端。
@@ -1660,6 +1661,9 @@ export function installMockApi(): void {
     if (ms) await new Promise((r) => setTimeout(r, ms));
     const full = (config.baseURL || "/api").replace(/^\/api/, "") + (config.url || "");
     ((window as any).__harnessRequests ||= []).push(full);
+    const research=researchReply(full,config.method,config.data,new URLSearchParams(location.search).get('researchcase'));
+    if(research)return {...reply(config),data:research};
+    if(full.endsWith('/scenario')&&full.includes('/commerce/'))return {...reply(config),data:{economics:{contribution_ron:'38.00',contribution_margin_pct:'38.00',break_even_ex_vat_ron:'56.82',target_sale_ex_vat_ron:'73.53',target_status:'calculated'},marketplace_writes:false}};
     const playbooks = playbookReply(full,config.method,config.data,new URLSearchParams(location.search).get('pbcase'),config.params?.before_sequence);
     if(playbooks) return {...reply(config),data:playbooks};
     // Compact workbench fixtures exercise store switching without real credentials.

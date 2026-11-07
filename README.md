@@ -73,3 +73,5 @@ See also [repository layout](docs/repository-layout.md), [verification and audit
 ## License
 
 AGPL-3.0. See [LICENSE](docs/license). Upstream attribution and existing license obligations remain in effect.
+
+- [Market research and profitability](docs/emag-market-research.md)

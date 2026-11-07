@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-11-08
+
+- Add a bilingual local opportunity/competitor ledger, atomic CSV import, exact-PNK matching, revision history and comparable historical quote changes. Extend profitability with contribution margin, break-even/target prices and snapshot-bound read-only sale-price scenarios. No marketplace writes or automatic external market feed.
+
 ## 2026-11-07
 
 - Add source-linked local eMAG playbooks for repair guidance, structured Listing checks, variant proposals, comparable-offer observations, period-bound advertising reviews, inbound packing and cost evidence. Records retain snapshot/revision history; no marketplace operation is executed. The new panel has English/Chinese catalogs and a persisted language selector.
