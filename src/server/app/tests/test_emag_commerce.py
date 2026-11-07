@@ -231,3 +231,17 @@ def test_extreme_allowed_costs_do_not_break_reverse_price():
 def test_zero_cost_target_requires_positive_revenue():
     result=commerce.calculate(profit_inputs(purchase_cny='0'),{'sale_price':'100'})['economics']
     assert result['target_sale_ex_vat_ron']=='0.01'
+
+
+def test_legacy_unsupported_numeric_inputs_remain_readable(snapshot):
+    import json
+    snap=snapshot()
+    commerce.save('demo-ro',snap['snapshot_id'],'1',0,profit_inputs(),'operator')
+    with commerce.database() as conn:
+        row=json.loads(conn.execute('SELECT payload FROM products').fetchone()[0])
+        row['inputs']['purchase_cny']='1e-999'
+        conn.execute('UPDATE products SET payload=?',(json.dumps(row),))
+    product=commerce.view('demo-ro')['products'][0]
+    assert product['record']['inputs']['purchase_cny']=='1e-999'
+    assert product['economics']['contribution_ron'] is None
+    assert product['input_error']

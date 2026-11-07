@@ -142,7 +142,13 @@ def view(store_id):
         record = saved.get(str(offer['id']))
         if record:
             record['stale'] = record['snapshot_id'] != snapshot['snapshot_id']
-        products.append({'offer': offer, 'record': record, **calculate(record['inputs'] if record else {}, offer)})
+        try:
+            result = calculate(record['inputs'] if record else {}, offer)
+            input_error = None
+        except ValueError as exc:
+            result = calculate({}, offer)
+            input_error = str(exc)
+        products.append({'offer': offer, 'record': record, 'input_error': input_error, **result})
     return {'store_id': store_id, 'snapshot_id': snapshot['snapshot_id'], 'captured_at': snapshot['captured_at'], 'products': products}
 
 

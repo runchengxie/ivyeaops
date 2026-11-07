@@ -72,5 +72,6 @@
   "review_price_change": "Review historical price change",
   "review_buy_button_change": "Review Buy Button observation change",
   "review_own_price_gap": "Check own price against the comparable observed quote",
-  "resolve_observation_conflict": "Resolve conflicting observations at the same time"
+  "resolve_observation_conflict": "Resolve conflicting observations at the same time",
+  "invalidSavedCosts": "Saved costs contain unsupported inputs. Historical values are retained; correct and save before relying on calculations."
 }
