@@ -149,3 +149,22 @@ def test_history_cursor_keeps_global_current_identity(snapshot):
     assert older["records_next_before"] is None
     with pytest.raises(ValueError):
         service.view("demo-ro", before_sequence=0)
+
+@pytest.mark.parametrize('kind,payload', [
+    ('variant', {'members': [{'product_id': '2', 'value': 'red'}, {'product_id': '3', 'value': 'blue'}]}),
+    ('inbound', {'items': [{'product_id': '2', 'quantity': '1', 'box': '1'}]}),
+])
+def test_group_record_primary_product_must_be_a_member(snapshot, kind, payload):
+    source = snapshot()
+    source = artifacts.import_snapshot({**{k: v for k, v in source.items() if k != 'snapshot_id'}, 'data': {'offers': [
+        {'id': i, 'name': f'Product {i}', 'general_stock': 1} for i in (1, 2, 3)]}})
+    with pytest.raises(ValueError, match='primary product'):
+        save(source, kind=kind, payload=payload)
+    key = 'members' if kind == 'variant' else 'items'
+    included = {key: [{**row, 'product_id': '1'} if index == 0 else row
+                     for index, row in enumerate(payload[key])]}
+    first = save(source, kind=kind, payload=included)
+    assert first['payload'][key][0]['product_id'] == '1'
+    with pytest.raises(ValueError, match='primary product'):
+        save(source, kind=kind, record_id=first['record_id'], revision=1, payload=payload)
+    assert save(source, kind='inbound', payload={})['assessment']['metrics'] == {}

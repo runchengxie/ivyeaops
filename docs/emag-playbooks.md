@@ -28,7 +28,7 @@ The new panel defaults to English and offers a persisted English/Chinese languag
 
 ## Evidence and results
 
-A checkbox or a supplied number records an operator assertion. It is not proof of marketplace approval, actual stock receipt, paid refunds or advertising attribution. A passed assessment means only that the submitted data satisfied that check. Missing inputs must not become zero. Listing image and barcode checks are explicitly manual; the historical documents' image dimensions, EAN examples and fees are not hard-coded as current platform requirements.
+A checkbox or a supplied number records an operator assertion. It is not proof of marketplace approval, actual stock receipt, paid refunds or advertising attribution. A passed assessment means only that the submitted data satisfied that check. Missing inputs must not become zero. Numeric inputs are bounded to one billion and at most 12 fractional places. Variant members and nonempty inbound lines must include the selected primary product. Listing image and barcode checks are explicitly manual; the historical documents' image dimensions, EAN examples and fees are not hard-coded as current platform requirements.
 
 Advertising results require a valid start/end period. CPC needs known spend and nonzero clicks; ROAS needs known revenue and nonzero spend. ROAS is a ratio of the entered figures, not accounting profit. Campaign and Adset states are separate observations. Report dates and account attribution must be checked by the operator.
 

@@ -3,7 +3,8 @@ import {api} from '../../../api/client';
 import {errText} from '../../../lib/errText';
 import en from './en.json';
 import zh from './zh-CN.json';
-import {cleanPayload,safeEvidenceUrl} from './data.mjs';
+import './playbooks.css';
+import {cleanPayload,safeEvidenceUrl,mergeVerifiedHistory} from './data.mjs';
 
 type Kind='listing'|'variant'|'competitor'|'ads'|'inbound'|'cost_evidence';
 type Payload=Record<string, any>;
@@ -37,16 +38,15 @@ export default function PlaybooksPanel({store,snapshotId}:{store:string;snapshot
    const head=await api.get(`/emag/stores/${encodeURIComponent(store)}/playbooks`);
    if(epoch!==generation.current)return;
    if(r.data.snapshot_id!==view.snapshot_id||head.data.snapshot_id!==view.snapshot_id){setView(null);setProduct('');selection.current++;setPayload({});setEditing(null);setError(t('snapshotChanged'));return;}
-   // Only freshly returned rows retain a current assessment. Cached rows are historical.
-   setView(previous=>{if(!previous)return head.data;const merged=new Map<string,Saved>();
-    for(const row of [...head.data.records,...r.data.records,...previous.records.map(row=>({...row,current:false}))] as Saved[]){const key=row.record_id+':'+row.revision;if(!merged.has(key))merged.set(key,row);}
-    return {...head.data,records_next_before:r.data.records_next_before,records:[...merged.values()]};});
+   // Current flags from a prior page cannot certify a later ledger generation.
+   setView(previous=>({...head.data,records_next_before:r.data.records_next_before,
+    records:mergeVerifiedHistory(head.data.records,r.data.records,previous?.records||[])}));
   }catch(e){if(epoch===generation.current)setError(errText(e,t('loadError')));}finally{if(epoch===generation.current)setBusy(false);}
  }
 
  function control(field:string,value:any,onChange:(v:string)=>void,id:string){const options=tristates.has(field)?tri:choices[field];return <label key={id} style={{display:'grid',gap:4,minWidth:0}}>{t('field.'+field)}{options?<select aria-label={t('field.'+field)} value={value??(tristates.has(field)?'unknown':'')} onChange={e=>onChange(e.target.value)}>{!tristates.has(field)&&<option value="">{t('unknown')}</option>}{options.map(o=><option key={o} value={o}>{catalog[o]||catalog['option.'+o]||o}</option>)}</select>:['description','package_contents','specification','scope','note'].includes(field)?<textarea aria-label={t('field.'+field)} rows={field==='description'?5:2} maxLength={field==='description'?40000:2000} value={value??''} onChange={e=>onChange(e.target.value)}/>:<input aria-label={t('field.'+field)} value={value??''} maxLength={2000} onChange={e=>onChange(e.target.value)}/>}</label>;}
  function refs(ids:string[]){return ids.map(id=>{const s=view?.sources.find(x=>(x.source_id||x.id)===id);return <details key={id}><summary>{s?.title||id}</summary><p>{s?.locator} · {s?.version} · {s?.date}</p><p>{s?.caveat}</p><p>{t('review')}</p></details>;});}
- return <section data-testid="playbooks-panel" style={{border:'1px solid var(--border)',padding:20,marginTop:20,minWidth:0}} lang={locale}>
+ return <section className="emag-playbooks" data-testid="playbooks-panel" style={{border:'1px solid var(--border)',padding:20,marginTop:20,minWidth:0}} lang={locale}>
  <h2>{t('heading')}</h2><label>{t('language')} <select aria-label={t('language')} value={locale} onChange={e=>{const l=e.target.value as 'en'|'zh-CN';setLocale(l);try{localStorage.setItem('emag.playbooks.locale',l);}catch{}}}><option value="en">{t('english')}</option><option value="zh-CN">{t('chinese')}</option></select></label><p>{t('manual')}</p>
  <button className="tbtn" disabled={busy} onClick={()=>void load()}>{t('reload')}</button>{error&&<p role="alert">{error}</p>}{message&&<p role="status">{message}</p>}
  {!view&&!error&&<p>{t('loading')}</p>}{view&&<><p>{t('current')}: {view.snapshot_id} · {new Date(view.captured_at).toLocaleString(locale,{timeZone:'Europe/Bucharest'})}</p>

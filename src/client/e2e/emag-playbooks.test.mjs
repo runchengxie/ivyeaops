@@ -17,3 +17,13 @@ test('catalogs contain identical semantic keys with translated form fields',()=>
  assert.deepEqual(Object.keys(en).sort(),Object.keys(zh).sort());
  for(const key of ['field.title','field.budget_ron','field.expected_ean','stale','manual','kind.cost_evidence'])assert.ok(en[key]&&zh[key]);
 });
+
+test('older page current flags cannot survive a newer head revision', async()=>{
+ const {mergeVerifiedHistory}=await import('../src/pages/workbench/playbooks/data.mjs');
+ const old={record_id:'family',revision:1,current:true};
+ const head={record_id:'family',revision:2,current:true};
+ const merged=mergeVerifiedHistory([head],[old],[]);
+ assert.equal(merged.find(r=>r.revision===1).current,false);
+ assert.equal(merged.find(r=>r.revision===2).current,true);
+ assert.equal(mergeVerifiedHistory([], [{record_id:'outside-head',revision:1,current:true}],[])[0].current,false);
+});

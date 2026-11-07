@@ -1,7 +1,7 @@
 """Pure local evidence checks. Manual confirmations never verify marketplace state."""
 from copy import deepcopy
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, DecimalException, InvalidOperation
 from urllib.parse import urlsplit
 
 from app.services.emag_commerce import COSTS
@@ -48,7 +48,7 @@ def _number(value, integer=False, positive=False):
         n = Decimal(value)
     except InvalidOperation:
         raise ValueError('Invalid numeric input') from None
-    if not n.is_finite() or n < 0 or n > 1000000000 or (integer and n != n.to_integral_value()) or (positive and n == 0):
+    if not n.is_finite() or n.as_tuple().exponent < -12 or n.as_tuple().exponent > 12 or n < 0 or n > 1000000000 or (integer and n != n.to_integral_value()) or (positive and n == 0):
         raise ValueError('Numeric input is outside its allowed range')
     return n
 
@@ -191,7 +191,10 @@ def assess(kind, payload, offers):
         if period:
             for output, numerator, denominator in (('cpc_ron', 'spend_ron', 'clicks'), ('roas', 'revenue_ron', 'spend_ron')):
                 if known(numerator) and known(denominator) and _number(p[denominator]) > 0:
-                    metrics[output] = str(_number(p[numerator]) / _number(p[denominator]))
+                    try:
+                        metrics[output] = str(_number(p[numerator]) / _number(p[denominator]))
+                    except DecimalException:
+                        raise ValueError('Result cannot be represented as a business decimal') from None
     elif kind == 'inbound':
         rows = p['items']
         status = 'failed' if any(r.get('ean') and r.get('expected_ean') and r['ean'] != r['expected_ean'] for r in rows) else 'unknown' if not rows or any(not r.get('ean') or not r.get('expected_ean') for r in rows) else 'passed'

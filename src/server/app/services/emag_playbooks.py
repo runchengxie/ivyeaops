@@ -134,6 +134,10 @@ def save(store_id, snapshot_id, kind, product_id, payload, actor, record_id=None
                 raise Conflict("New records require revision zero")
             scope = selected if kind == "ads" else offers
             normalized = rules.validate_payload(kind, payload, scope)
+            if kind in ("variant", "inbound"):
+                members = normalized["members" if kind == "variant" else "items"]
+                if members and not any(row["product_id"] == product_id for row in members):
+                    raise ValueError("The primary product must be included in the group")
             result = {
                 "record_id": record_id or secrets.token_hex(16),
                 "store_id": store_id,

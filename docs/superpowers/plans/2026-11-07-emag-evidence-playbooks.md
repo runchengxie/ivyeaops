@@ -1,6 +1,6 @@
 # eMAG evidence playbooks Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Deliver source-linked local eMAG workflows for existing-stock repair, Listing, variants, competitor observations, advertising, inbound checks and cost evidence.
 
@@ -29,25 +29,25 @@
 
 Files: create `src/server/app/services/emag_playbook_rules.py`, tests `src/server/app/tests/test_emag_playbook_rules.py`.
 Interfaces: `sources()`, `repair_guidance(snapshot)`, `validate_payload(kind,payload,offers)`, `assess(kind,payload,offers)` per spec.
-- [ ] Write failing boundary and readiness tests, run them RED.
-- [ ] Implement validated seven-kind payloads, assessments and reference metadata.
-- [ ] Run rule tests GREEN and backend lint.
+- [x] Write failing boundary and readiness tests, run them RED.
+- [x] Implement validated seven-kind payloads, assessments and reference metadata.
+- [x] Run rule tests GREEN and backend lint.
 
 ### Task 2: Private ledger and admin API
 
 Files: create `src/server/app/services/emag_playbooks.py`, extend `src/server/app/routers/emag_operations.py`, tests `src/server/app/tests/test_emag_playbooks.py`.
 Consumes Task 1 interfaces. Produces GET workspace and POST revision-checked records per spec.
-- [ ] Write failing API/auth/staleness/store/revision tests and run RED.
-- [ ] Implement atomic persistence, historical assessment handling and router.
-- [ ] Run new tests plus existing workspace/commerce/operations regressions.
+- [x] Write failing API/auth/staleness/store/revision tests and run RED.
+- [x] Implement atomic persistence, historical assessment handling and router.
+- [x] Run new tests plus existing workspace/commerce/operations regressions.
 
 ### Task 3: Bilingual workspace panel
 
 Files: create focused `src/client/src/pages/workbench/playbooks/` panel/types/catalogs; modify `EmagWorkspace.tsx`; real App harness fixtures and regression checks.
 Consumes Task 2 API contract. No shared files with rule/store implementers.
-- [ ] Add failing locale/data contract tests and real harness scenarios.
-- [ ] Implement seven forms, product/store guards, edit revisions, errors, histories, source-linked repair guidance, contextual source metadata and checks.
-- [ ] Run client typecheck, i18n, build and real App harness UI validation.
+- [x] Add failing locale/data contract tests and real harness scenarios.
+- [x] Implement seven forms, product/store guards, edit revisions, errors, histories, source-linked repair guidance, contextual source metadata and checks.
+- [x] Run client typecheck, i18n, build and real App harness UI validation.
 
 ### Task 4: Documentation, review and integration
 

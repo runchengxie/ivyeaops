@@ -133,3 +133,17 @@ def test_rejection_repair_contains_review_steps_not_root_cause_claims():
     repair = next(x for x in r.repair_guidance(snapshot) if x['reason'] == 'documentation_rejected')
     assert {'review_main_image', 'review_mandatory_attributes', 'review_language', 'review_barcode'} <= set(repair['rule_ids'])
     assert 'root_cause' not in repair
+
+@pytest.mark.parametrize('value', ['1e-1000000', '0e999999999999999999', '0.0000000000001'])
+def test_extreme_decimal_scale_is_validation_error(value):
+    payload = {'spend_ron': value, 'revenue_ron': '1',
+               'period_start': '2026-01-01T00:00:00Z', 'period_end': '2026-01-02T00:00:00Z'}
+    with pytest.raises(ValueError):
+        r.assess('ads', payload, OFFERS)
+
+
+def test_small_business_decimals_and_zero_remain_valid():
+    p = {'spend_ron': '0.000001', 'clicks': '1', 'revenue_ron': '1',
+         'period_start': '2026-01-01T00:00:00Z', 'period_end': '2026-01-02T00:00:00Z'}
+    assert r.assess('ads', p, OFFERS)['metrics']['roas'] == '1E+6'
+    assert r.validate_payload('ads', {'spend_ron': '0'}, OFFERS)['spend_ron'] == '0'
