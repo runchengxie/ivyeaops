@@ -162,3 +162,62 @@ def test_net_revenue_does_not_change_with_vat_when_commission_is_zero():
         result=commerce.calculate({**costs(),'vat_pct':vat,'commission_pct':'0'},{'sale_price':'119'})['economics']
         assert result['revenue_ex_vat_ron']=='119.00'
         assert result['contribution_ron']=='89.70'
+
+
+def profit_inputs(**overrides):
+    return {**dict.fromkeys(commerce.COSTS, '0'), 'purchase_cny': '50', 'cny_to_ron': '1',
+            'commission_pct': '10', 'vat_pct': '20', 'target_margin_pct': '20', **overrides}
+
+
+def test_margin_and_reverse_price_scenarios():
+    result = commerce.calculate(profit_inputs(), {'sale_price': '100'})['economics']
+    assert result['contribution_ron'] == '38.00'
+    assert result['contribution_margin_pct'] == '38.00'
+    assert result['break_even_ex_vat_ron'] == '56.82'
+    assert result['target_sale_ex_vat_ron'] == '73.53'
+
+
+def test_zero_revenue_and_unachievable_target_are_explicit():
+    result = commerce.calculate(profit_inputs(), {'sale_price': '0'})['economics']
+    assert result['contribution_margin_pct'] is None
+    result = commerce.calculate(profit_inputs(target_margin_pct='90'), {'sale_price': '100'})['economics']
+    assert result['target_sale_ex_vat_ron'] is None
+    assert result['target_status'] == 'infeasible'
+    assert commerce.calculate({}, {})['economics']['break_even_ex_vat_ron'] is None
+
+
+@pytest.mark.parametrize('value', ['1e-999999', '1e999999', '0.' + '1' * 100])
+def test_decimal_precision_is_bounded(value):
+    with pytest.raises(ValueError):
+        commerce.number(value)
+
+
+def test_reverse_price_rounds_up_to_meet_target():
+    result=commerce.calculate(profit_inputs(purchase_cny='1',commission_pct='0',vat_pct='0',target_margin_pct='30'),{'sale_price':'2'})['economics']
+    assert result['target_sale_ex_vat_ron']=='1.43'
+
+
+def test_profit_scenario_api_is_snapshot_bound_and_read_only(snapshot):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from app.core.security import require_admin
+    from app.routers.emag_operations import router
+    snap=snapshot();app=FastAPI();app.include_router(router,prefix='/api/emag')
+    with TestClient(app) as client:
+        path='/api/emag/stores/demo-ro/commerce/1/scenario'
+        body={'snapshot_id':snap['snapshot_id'],'sale_price':'100','inputs':profit_inputs()}
+        assert client.post(path,json=body).status_code==401
+        app.dependency_overrides[require_admin]=lambda:'operator'
+        result=client.post(path,json=body)
+        assert result.status_code==200
+        assert result.json()['economics']['contribution_margin_pct']=='38.00'
+        assert result.json()['marketplace_writes'] is False
+        assert commerce.view('demo-ro')['products'][0]['record'] is None
+        snapshot()
+        assert client.post(path,json=body).status_code==409
+
+
+def test_break_even_price_never_rounds_below_costs():
+    result=commerce.calculate(profit_inputs(purchase_cny='1',commission_pct='10',vat_pct='0',target_margin_pct='0'),{'sale_price':'2'})['economics']
+    assert result['break_even_ex_vat_ron']=='1.12'
+    assert result['target_sale_ex_vat_ron']=='1.12'

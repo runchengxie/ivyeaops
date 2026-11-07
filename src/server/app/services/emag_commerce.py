@@ -18,21 +18,24 @@ def number(value):
     if isinstance(value, bool):
         raise ValueError('Boolean is not a numeric input')
     try:
-        result = Decimal(str(value))
+        text = str(value)
+        if len(text) > 64:
+            raise ValueError('Numeric input is too long')
+        result = Decimal(text)
     except (InvalidOperation, ValueError):
         raise ValueError('Invalid numeric input') from None
-    if not result.is_finite() or result < 0 or result > Decimal('1000000000'):
+    if not result.is_finite() or not -12 <= result.as_tuple().exponent <= 12 or result < 0 or result > Decimal('1000000000'):
         raise ValueError('Numeric inputs must be finite and between 0 and 1000000000')
     return result
 
 
 def validate(inputs):
-    if not isinstance(inputs, dict) or set(inputs) - set(COSTS + DEMAND + TEXT + ('supplier_confirmed',)):
+    if not isinstance(inputs, dict) or set(inputs) - set(COSTS + DEMAND + TEXT + ('supplier_confirmed', 'target_margin_pct')):
         raise ValueError('Unknown commercial input')
-    for key in COSTS + DEMAND:
+    for key in COSTS + DEMAND + ('target_margin_pct',):
         if inputs.get(key) not in (None, ''):
             value = number(inputs[key])
-            if key in ('commission_pct', 'vat_pct') and value > 100:
+            if key in ('commission_pct', 'vat_pct', 'target_margin_pct') and value > 100:
                 raise ValueError('Percentage must be at most 100')
             if key == 'cny_to_ron' and value == 0:
                 raise ValueError('Exchange rate must be positive')
@@ -67,7 +70,8 @@ def calculate(inputs, offer):
         number(offer.get('sale_price'))
     except ValueError:
         missing.append('sale_price')
-    economics = {'sale_price_basis':'exclusive_vat','status': 'incomplete', 'missing': missing, 'contribution_ron': None,
+    economics = {'sale_price_basis':'exclusive_vat','status': 'incomplete', 'missing': missing, 'contribution_ron': None, 'contribution_margin_pct': None,
+                 'break_even_ex_vat_ron': None, 'target_sale_ex_vat_ron': None, 'target_status': 'missing',
                  'note': 'Per-unit scenario, not accounting profit; raw eMAG price excludes VAT. Commission percentage is a user-entered gross-price scenario assumption, not a verified platform fee rule; confirm fees and procurement.'}
     if not missing:
         v = {key: number(inputs[key]) for key in COSTS}
@@ -77,6 +81,14 @@ def calculate(inputs, offer):
         cost = ((v['purchase_cny'] + v['domestic_cny']) * v['cny_to_ron']
                 + sum(v[k] for k in ('international_ron', 'duties_ron', 'fulfilment_ron', 'other_ron', 'return_allowance_ron')))
         commission = gross_sale * v['commission_pct'] / 100
+        contribution = revenue - cost - commission
+        retained = 1 - (1 + v['vat_pct'] / 100) * v['commission_pct'] / 100
+        economics['contribution_margin_pct'] = f'{contribution / revenue * 100:.2f}' if revenue else None
+        economics['break_even_ex_vat_ron'] = str((cost / retained).quantize(Decimal('0.01'),rounding=ROUND_CEILING)) if retained > 0 else None
+        if inputs.get('target_margin_pct') not in (None, ''):
+            denominator = retained - number(inputs['target_margin_pct']) / 100
+            economics['target_status'] = 'calculated' if denominator > 0 else 'infeasible'
+            economics['target_sale_ex_vat_ron'] = str((cost / denominator).quantize(Decimal('0.01'),rounding=ROUND_CEILING)) if denominator > 0 else None
         economics.update(status='actual_inputs_estimate' if inputs.get('cost_basis') == 'actual' else 'reference_estimate',
                          revenue_ex_vat_ron=f'{revenue:.2f}', gross_sale_price_ron=f'{gross_sale:.2f}', unit_cost_ron=f'{cost:.2f}',
                          commission_ron=f'{commission:.2f}', contribution_ron=f'{revenue-cost-commission:.2f}')

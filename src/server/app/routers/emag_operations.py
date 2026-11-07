@@ -170,3 +170,26 @@ def playbooks_save(store_id: str, body: PlaybookRecord, actor=Depends(require_ad
         raise HTTPException(409, str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
+
+
+class ProfitScenario(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    snapshot_id: str
+    inputs: dict
+    sale_price: str = Field(min_length=1,max_length=64)
+
+
+@router.post('/stores/{store_id}/commerce/{product_id}/scenario')
+def profit_scenario(store_id: str, product_id: str, body: ProfitScenario):
+    from app.services import emag_commerce
+    try:
+        snapshot = emag_commerce.source(store_id)
+        if snapshot['snapshot_id'] != body.snapshot_id:
+            raise ValueError('Evidence is stale; reload first')
+        offer = next((o for o in snapshot['data']['offers'] if str(o['id']) == product_id), None)
+        if offer is None:
+            raise ValueError('Product absent from current snapshot')
+        return {'snapshot_id':body.snapshot_id,'marketplace_writes':False,
+                **emag_commerce.calculate(body.inputs,{**offer,'sale_price':body.sale_price})}
+    except (OSError,ValueError) as exc:
+        raise HTTPException(409,str(exc)) from exc
