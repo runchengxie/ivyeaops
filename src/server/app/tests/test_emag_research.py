@@ -68,6 +68,8 @@ def test_comparable_history_has_change_and_source(snapshot):
     s.import_rows('demo-ro',snap['snapshot_id'],[observation(),observation(price='110',observed_at='2026-11-07T01:00:00Z')],'a')
     change=s.view('demo-ro')['comparisons'][0]
     assert change['price_change']=='-10.00'
+    assert change['market']=='RO'
+    assert change['comparison_key']=='black-1pack-fbe'
     assert change['source_url'].startswith('https://')
 
 
@@ -94,3 +96,22 @@ def test_research_api_auth_and_import_rollback(snapshot):
         assert response.json()['actor']=='operator'
         assert client.post(base+'/import',json={'snapshot_id':snap['snapshot_id'],'rows':[observation(pnk='')]}).status_code==422
         assert len(client.get(base).json()['records'])==1
+
+
+def test_same_instant_different_timezone_never_creates_change(snapshot):
+    s=service();snap=snapshot()
+    s.import_rows('demo-ro',snap['snapshot_id'],[observation(),observation(price='110',observed_at='2026-11-07T01:00:00+01:00')],'a')
+    assert s.view('demo-ro')['comparisons']==[]
+
+
+def test_ambiguous_latest_timestamp_does_not_choose_arbitrary_price(snapshot):
+    s=service();snap=snapshot()
+    s.import_rows('demo-ro',snap['snapshot_id'],[observation(),observation(price='110',observed_at='2026-11-07T01:00:00Z'),observation(price='105',observed_at='2026-11-07T01:00:00Z')],'a')
+    assert any(p['reason']=='resolve_observation_conflict' for p in s.view('demo-ro')['prompts'])
+
+
+def test_quote_changes_cost_gaps_and_comparable_own_price_make_prompts(snapshot):
+    s=service();snap=snapshot()
+    s.import_rows('demo-ro',snap['snapshot_id'],[observation(price='90',price_basis='exclusive_vat',buy_button='no'),observation(price='80',price_basis='exclusive_vat',buy_button='yes',observed_at='2026-11-07T01:00:00Z')],'a')
+    reasons={p['reason'] for p in s.view('demo-ro')['prompts']}
+    assert {'review_price_change','review_buy_button_change','review_own_price_gap','confirm_costs'} <= reasons

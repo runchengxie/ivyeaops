@@ -221,3 +221,13 @@ def test_break_even_price_never_rounds_below_costs():
     result=commerce.calculate(profit_inputs(purchase_cny='1',commission_pct='10',vat_pct='0',target_margin_pct='0'),{'sale_price':'2'})['economics']
     assert result['break_even_ex_vat_ron']=='1.12'
     assert result['target_sale_ex_vat_ron']=='1.12'
+
+
+def test_extreme_allowed_costs_do_not_break_reverse_price():
+    result=commerce.calculate(profit_inputs(purchase_cny='1000000000',cny_to_ron='1000000000',commission_pct='99.999999999999',vat_pct='0',target_margin_pct='0'),{'sale_price':'100'})['economics']
+    assert result['break_even_ex_vat_ron']=='100000000000000000000000000000000.00'
+
+
+def test_zero_cost_target_requires_positive_revenue():
+    result=commerce.calculate(profit_inputs(purchase_cny='0'),{'sale_price':'100'})['economics']
+    assert result['target_sale_ex_vat_ron']=='0.01'

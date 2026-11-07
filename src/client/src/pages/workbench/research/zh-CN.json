@@ -68,5 +68,9 @@
   "after": "之后",
   "buttonChanged": "购买按钮观察发生变化",
   "priceChange": "价格变化",
-  "costLink": "打开成本分析"
+  "costLink": "打开成本分析",
+  "review_price_change": "核对历史报价变化",
+  "review_buy_button_change": "核对购买按钮观察变化",
+  "review_own_price_gap": "核对本店售价与可比观察报价的差距",
+  "resolve_observation_conflict": "核对同一时刻互相冲突的观察"
 }

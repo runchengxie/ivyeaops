@@ -4,7 +4,7 @@ import re
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from decimal import Decimal, InvalidOperation, ROUND_CEILING
+from decimal import Decimal, InvalidOperation, ROUND_CEILING, localcontext
 from urllib.parse import urlsplit
 from app.services import store_artifacts as artifacts, emag_operations
 
@@ -64,6 +64,12 @@ def validate(inputs):
 
 
 def calculate(inputs, offer):
+    with localcontext() as context:
+        context.prec = 80
+        return _calculate(inputs, offer)
+
+
+def _calculate(inputs, offer):
     validate(inputs)
     missing = [key for key in COSTS if inputs.get(key) in (None, '')]
     try:
@@ -88,7 +94,7 @@ def calculate(inputs, offer):
         if inputs.get('target_margin_pct') not in (None, ''):
             denominator = retained - number(inputs['target_margin_pct']) / 100
             economics['target_status'] = 'calculated' if denominator > 0 else 'infeasible'
-            economics['target_sale_ex_vat_ron'] = str((cost / denominator).quantize(Decimal('0.01'),rounding=ROUND_CEILING)) if denominator > 0 else None
+            economics['target_sale_ex_vat_ron'] = str(max(Decimal('0.01'),(cost / denominator).quantize(Decimal('0.01'),rounding=ROUND_CEILING))) if denominator > 0 else None
         economics.update(status='actual_inputs_estimate' if inputs.get('cost_basis') == 'actual' else 'reference_estimate',
                          revenue_ex_vat_ron=f'{revenue:.2f}', gross_sale_price_ron=f'{gross_sale:.2f}', unit_cost_ron=f'{cost:.2f}',
                          commission_ron=f'{commission:.2f}', contribution_ron=f'{revenue-cost-commission:.2f}')

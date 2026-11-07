@@ -68,5 +68,9 @@
   "after": "After",
   "buttonChanged": "Buy Button observation changed",
   "priceChange": "Price change",
-  "costLink": "Open cost analysis"
+  "costLink": "Open cost analysis",
+  "review_price_change": "Review historical price change",
+  "review_buy_button_change": "Review Buy Button observation change",
+  "review_own_price_gap": "Check own price against the comparable observed quote",
+  "resolve_observation_conflict": "Resolve conflicting observations at the same time"
 }

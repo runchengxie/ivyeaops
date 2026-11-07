@@ -5,6 +5,7 @@ import secrets
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
+from decimal import Decimal
 from urllib.parse import urlsplit
 from app.services import store_artifacts as artifacts, emag_commerce
 
@@ -144,20 +145,51 @@ def view(store):
             key = tuple(p.get(k) for k in ('pnk','market','currency','price_basis','seller','comparison_key'))
             groups.setdefault(key,[]).append(p)
         comparisons = []
+        conflicts = []
         for entries in groups.values():
-            entries.sort(key=lambda p:timestamp(p['observed_at']))
-            if len(entries)<2 or entries[-1]['observed_at']==entries[-2]['observed_at']:
+            instants = {}
+            for p in entries:
+                instants.setdefault(timestamp(p['observed_at']), []).append(p)
+            distinct = []
+            for instant, samples in sorted(instants.items()):
+                values = {(Decimal(p['price']), p['buy_button']) for p in samples}
+                if len(values) > 1:
+                    conflicts.append(samples[0]['pnk'])
+                    continue
+                distinct.append(samples[0])
+            if len(distinct) < 2:
                 continue
-            before, after = entries[-2:]
+            before, after = distinct[-2:]
             comparisons.append({'pnk':after['pnk'],'seller':after['seller'],'currency':after['currency'],
+                'market':after['market'],'comparison_key':after['comparison_key'],
                 'price_basis':after['price_basis'],'before_at':before['observed_at'],'after_at':after['observed_at'],
                 'price_change':f"{emag_commerce.number(after['price'])-emag_commerce.number(before['price']):.2f}",
                 'buy_button_changed':after['buy_button'] != 'unknown' and before['buy_button'] != 'unknown' and after['buy_button'] != before['buy_button'],
                 'source_url':after['source_url']})
-        prompts = [{'record_id':r['record_id'],'pnk':r['payload']['pnk'], 'reason':reason}
-                   for r in records for reason in (['review_snapshot'] if r['stale'] else []) +
-                   (['resolve_product_identity'] if r['match']['status']=='ambiguous' else []) +
-                   (['confirm_costs'] if r['payload']['status']=='costing' else [])]
+        prompts = []
+        costs = {str(p['offer']['id']):p for p in emag_commerce.view(store)['products']}
+        for row in records:
+            p = row['payload']
+            reasons = []
+            if row['stale']:
+                reasons.append('review_snapshot')
+            if row['match']['status'] == 'ambiguous':
+                reasons.append('resolve_product_identity')
+            own = costs.get(row['match']['product_ids'][0]) if row['match']['status'] == 'matched' else None
+            if p['status'] == 'costing' or (own and (own['economics']['missing'] or own['record'] and own['record']['stale'])):
+                reasons.append('confirm_costs')
+            if (own and not row['stale'] and p['kind']=='quote' and p['market']=='RO' and p['currency']=='RON'
+                    and p['price_basis']=='exclusive_vat' and p['price'] is not None):
+                try:
+                    if emag_commerce.number(own['offer'].get('sale_price')) > emag_commerce.number(p['price']):
+                        reasons.append('review_own_price_gap')
+                except ValueError:
+                    pass
+            prompts.extend({'record_id':row['record_id'],'pnk':p['pnk'],'reason':reason} for reason in reasons)
+        for comparison in comparisons:
+            for reason in (['review_price_change'] if Decimal(comparison['price_change']) != 0 else []) + (['review_buy_button_change'] if comparison['buy_button_changed'] else []):
+                prompts.append({'record_id':'','pnk':comparison['pnk'],'reason':reason})
+        prompts.extend({'record_id':'','pnk':pnk,'reason':'resolve_observation_conflict'} for pnk in sorted(set(conflicts)))
         return {'snapshot_id':snap['snapshot_id'],'records':records,'history':history,'truncated':len(rows)>2000,
                 'comparisons':comparisons,'prompts':prompts,'marketplace_writes':False,
                 'scope':'Observed samples only; historical changes do not establish current full-market conditions.'}
