@@ -1,4 +1,5 @@
 import clearanceFixture from './clearanceFixture.json';
+import { playbookReply } from './playbookFixture';
 // 验证台的假后端。
 //
 // ── 为什么要有这个东西 ────────────────────────────────────────────────────
@@ -1654,11 +1655,13 @@ export function installMockApi(): void {
 
   let authAttempts = 0;
   let emagApproved=false,agentDecided=false;
-  const slowReply = async (config: { url?: string; baseURL?: string;data?:unknown;method?:string }) => {
+  const slowReply = async (config: { url?: string; baseURL?: string;data?:unknown;method?:string;params?:{before_sequence?:number} }) => {
     const ms = delayFor((config.baseURL || "") + (config.url || ""));
     if (ms) await new Promise((r) => setTimeout(r, ms));
     const full = (config.baseURL || "/api").replace(/^\/api/, "") + (config.url || "");
     ((window as any).__harnessRequests ||= []).push(full);
+    const playbooks = playbookReply(full,config.method,config.data,new URLSearchParams(location.search).get('pbcase'),config.params?.before_sequence);
+    if(playbooks) return {...reply(config),data:playbooks};
     // Compact workbench fixtures exercise store switching without real credentials.
     const workbenchCase = new URLSearchParams(location.search).get('wbcase');
     if (workbenchCase === 'minimal-many' && full === '/emag/stores/demo-ro/workspace') {

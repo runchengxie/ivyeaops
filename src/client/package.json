@@ -30,7 +30,8 @@
     "test:reattach": "node e2e/live-reattach.mjs",
     "test:workbench": "node --test e2e/simple-workbench.test.mjs",
     "test:reliability": "node --test e2e/upstream-reliability.test.mjs",
-    "test:render": "node --test e2e/render-contract.test.mjs"
+    "test:render": "node --test e2e/render-contract.test.mjs",
+    "test:emag-playbooks": "node --test e2e/emag-playbooks.test.mjs"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.3",

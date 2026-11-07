@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-11-07
+
+- Add source-linked local eMAG playbooks for repair guidance, structured Listing checks, variant proposals, comparable-offer observations, period-bound advertising reviews, inbound packing and cost evidence. Records retain snapshot/revision history; no marketplace operation is executed. The new panel has English/Chinese catalogs and a persisted language selector.
+
 ## [Unreleased]
 
 - Simplify the store workbench with neutral styling, three visible priorities, shorter questions and plain send/stop controls. Move model/workspace/attachment controls behind Options while retaining visible effective approval, goal and persona state; full Console defaults remain unchanged.

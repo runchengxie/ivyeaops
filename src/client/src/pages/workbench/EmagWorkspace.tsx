@@ -1,5 +1,6 @@
 import EmagClearance, {type Clearance} from './EmagClearance';
 import EmagCommerce from './EmagCommerce';
+import PlaybooksPanel from './playbooks/PlaybooksPanel';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api/client';
@@ -32,6 +33,7 @@ export default function EmagWorkspace({mode}:{mode:WorkspaceMode}){
     {error&&<p role="alert">{error}</p>}{!stores.length&&!error&&<p>暂无 eMAG RO 快照。请先通过手动无头命令采集。</p>}
     {data&&<><p>采集时间 {new Date(data.captured_at).toLocaleString()} · {data.offers.length} 条商品 · 异常原因 {data.issues.length} 项</p>
       <details><summary>来源、版本与限制</summary><p>{data.source} · {data.snapshot_id}</p><p>覆盖：{data.coverage.join('、')}</p><ul>{data.limitations.map((x,i)=><li key={i}>{x}</li>)}</ul></details>
+      {['listing','playbook','tools'].includes(mode)&&<PlaybooksPanel key={store} store={store} snapshotId={data.snapshot_id}/>}
       {mode==='dashboard'&&<EmagDashboard data={data}/>} {['dashboard','playbook'].includes(mode)&&data.clearance&&<EmagClearance key={store+data.snapshot_id} data={data.clearance} onPlan={mode==='playbook'?(id,title,body)=>{setProduct(id);setTitle(title);setBody(body);}:undefined}/>} {mode==='market'&&data.return_voc&&<section><h2>已采集退货原因</h2><p>覆盖状态：{data.return_voc.status}。仅描述退货申请，不代表已退款或整体客户满意度。缺失原因 {data.return_voc.missing_reason_rows} 行，商品未匹配 {data.return_voc.unmatched_rows} 行，格式异常 {data.return_voc.invalid_rows} 行。</p><ul>{data.return_voc.groups.map((g,i)=><li key={i}>商品 {g.offer_id} · {g.reason} · {g.case_count} 个申请样本<details><summary>字段来源</summary>{g.source_refs.map(ref=><p key={ref}>{data.snapshot_id} {ref}</p>)}</details></li>)}</ul>{data.return_voc.groups_truncated&&<p>结果仅显示前100组。</p>}</section>} {mode==='tools'&&<EmagCommerce key={store} store={store}/>}
       {mode==='market'&&<section><h2>本店商品结构</h2><p>按平台 category_id 统计，不代表市场需求或竞品份额。全市场搜索量、竞品价格与销量尚未接入。</p><ul>{[...categories].sort((a,b)=>b[1]-a[1]).map(([c,n])=><li key={c}>类目 {c}：{n} 条</li>)}</ul><p>可在下方保存有来源链接、采集日期和观察范围的人工调研记录。</p></section>}
       {mode==='playbook'&&<section><h2>依据现有异常安排动作</h2><ol><li>优先核实有库存且价格无效的商品：{data.issues.filter(i=>i.reason==='invalid_price'&&(i.general_stock??0)>0).length} 条。</li><li>资料拒绝与封锁逐项核对平台原因，补齐凭证后人工处理。</li><li>本轮聚焦已有库存消化，暂停新增采购与补货。降价方案需先核对历史成本和继续持有费用，复查必须采集新快照。</li></ol><p>此处保存方案草稿；审批与人工执行记录在巡检页逐步填写。</p></section>}

@@ -191,6 +191,9 @@ jobs:
       - name: Compact workbench regressions
         working-directory: src/client
         run: npm run test:workbench
+      - name: eMAG playbook contracts
+        working-directory: src/client
+        run: npm run test:emag-playbooks
       - name: Upstream reliability regressions
         working-directory: src/client
         run: npm run test:reliability

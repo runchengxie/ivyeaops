@@ -13,6 +13,7 @@ A self-hosted eMAG RO operations workspace, forked from [Hector-xue/IvyeaOps](ht
 - Read-only eMAG RO collection for offers, selected seller/FBE orders, returns, invoices and VAT data.
 - Versioned snapshots, deterministic manual audit reports, bounded change previews and run receipts.
 - Administrator workspaces for inspection records, own-catalog research, plans and local Listing drafts.
+- [Source-linked local playbooks](docs/emag-playbooks.md) for repair, Listing checks, variants, comparable offers, advertising reviews, inbound packing and cost evidence.
 - Local proposal approvals bound to the current snapshot and revision. Approval does not execute a marketplace change.
 - A separate, disabled-by-default [admin price API](docs/emag-write-readiness.md) for exact single-offer approval, submission and read-back.
 - Read-scoped MCP tools for snapshots, receipts and reports. Saving a local report requires a write-scoped token.
