@@ -82,6 +82,8 @@ def test_research_api_auth_and_import_rollback(snapshot):
     from fastapi.testclient import TestClient
     from app.core.security import require_admin
     from app.routers import emag_research
+    import importlib
+    importlib.reload(emag_research)
     snap=snapshot(); app=FastAPI();app.include_router(emag_research.router,prefix='/api/emag')
     with TestClient(app) as client:
         base='/api/emag/stores/demo-ro/research'
