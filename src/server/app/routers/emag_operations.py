@@ -1,5 +1,5 @@
 from __future__ import annotations
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 from app.core.security import require_admin
 from app.services import emag_operations as service
@@ -138,3 +138,35 @@ def commerce_history(store_id:str,product_id:str,before_revision:int|None=None):
     from app.services import emag_commerce
     try:return emag_commerce.history(store_id,product_id,before_revision)
     except (OSError,ValueError) as exc:raise HTTPException(409,str(exc)) from exc
+
+
+class PlaybookRecord(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    snapshot_id: str = Field(min_length=1, max_length=100)
+    kind: str = Field(min_length=1, max_length=30)
+    product_id: str = Field(min_length=1, max_length=200)
+    payload: dict
+    record_id: str | None = Field(default=None, min_length=1, max_length=100)
+    revision: int = Field(default=0, ge=0, strict=True)
+
+
+@router.get('/stores/{store_id}/playbooks')
+def playbooks_view(store_id: str, before_sequence: int | None = Query(default=None, gt=0)):
+    from app.services import emag_playbooks
+    try:
+        return emag_playbooks.view(store_id, before_sequence=before_sequence)
+    except emag_playbooks.MissingWorkspace as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+
+@router.post('/stores/{store_id}/playbooks/records')
+def playbooks_save(store_id: str, body: PlaybookRecord, actor=Depends(require_admin)):
+    from app.services import emag_playbooks
+    try:
+        return emag_playbooks.save(store_id, **body.model_dump(), actor=str(actor))
+    except emag_playbooks.MissingWorkspace as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except emag_playbooks.Conflict as exc:
+        raise HTTPException(409, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
